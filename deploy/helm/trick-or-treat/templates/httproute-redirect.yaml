@@ -1,0 +1,22 @@
+{{- if and .Values.httpRoute.enabled .Values.httpRoute.redirectHttp.enabled }}
+# Plain-HTTP requests get a permanent redirect to HTTPS.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ include "trick-or-treat.fullname" . }}-redirect
+  labels:
+    {{- include "trick-or-treat.labels" . | nindent 4 }}
+spec:
+  parentRefs:
+    {{- toYaml .Values.httpRoute.redirectHttp.parentRefs | nindent 4 }}
+  {{- with .Values.httpRoute.hostnames }}
+  hostnames:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  rules:
+    - filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            statusCode: 301
+{{- end }}

@@ -92,14 +92,13 @@ curl -H "Authorization: Bearer $TOKEN" https://trick-or-treat.example.com/api/ad
 
 ## Deploy to Kubernetes
 
-Build and push the image locally (CI only runs on `v*` tags or manual dispatch to save Actions minutes):
+The image `ghcr.io/daedaluz/trick-or-treat` is public. Build and push a new one locally
+(CI only runs on `v*` tags or manual dispatch to save Actions minutes):
 
 ```bash
-docker login ghcr.io
+docker login ghcr.io   # token with write:packages
 make push TAG=0.1.0
 ```
-
-The repo is private, so the cluster needs a pull secret for `ghcr.io/daedaluz/trick-or-treat`.
 
 ```bash
 helm upgrade --install trick-or-treat deploy/helm/trick-or-treat \

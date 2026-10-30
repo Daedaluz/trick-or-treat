@@ -68,6 +68,13 @@ httpRoute:
       # sectionName: https
   hostnames:
     - trick-or-treat.example.com
+  # Redirect plain HTTP to HTTPS via the gateway's HTTP listener.
+  redirectHttp:
+    enabled: false
+    parentRefs:
+      - name: gateway
+        namespace: gateway-system
+        sectionName: http
 
 resources:
   requests:
