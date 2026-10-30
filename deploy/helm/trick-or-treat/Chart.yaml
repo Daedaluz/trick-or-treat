@@ -2,6 +2,6 @@ apiVersion: v2
 name: trick-or-treat
 description: A map of doors that actually want trick-or-treaters
 type: application
-version: 0.4.0
-appVersion: "0.4.0"
+version: 0.4.1
+appVersion: "0.4.1"
 home: https://github.com/Daedaluz/trick-or-treat

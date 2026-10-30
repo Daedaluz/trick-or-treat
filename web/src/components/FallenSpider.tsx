@@ -18,8 +18,8 @@ const MAX_MS = 30000; // safety net: never linger longer than this, tilt play or
 /**
  * A spider whose thread just snapped. Simple rigid-ish body: gravity follows
  * the phone's tilt, it bounces off the viewport edges, rolls while moving,
- * lies on its back when it comes to rest, and after a while flips over and
- * runs off. Another shake kicks it.
+ * sits dazed when it comes to rest, and after a while shakes it off and
+ * runs away. Another shake kicks it.
  */
 export default function FallenSpider({ start, dir, onDone }: Props) {
   const el = useRef<HTMLDivElement>(null);
@@ -51,7 +51,7 @@ export default function FallenSpider({ start, dir, onDone }: Props) {
     const recover = () => {
       recovering = true;
       // Flip upright (relative to gravity) and run for the nearest exit.
-      const up = (Math.atan2(gravity.x, gravity.y) * 180) / Math.PI;
+      const up = (Math.atan2(-gravity.x, gravity.y) * 180) / Math.PI;
       node.style.transition = "transform .35s ease-out";
       node.style.transform = `translate(${x - SIZE / 2}px, ${y - SIZE / 2}px) rotate(${up}deg)`;
       face.style.opacity = "0";
@@ -96,9 +96,10 @@ export default function FallenSpider({ start, dir, onDone }: Props) {
         omega = ((vx - vy) / r) * (180 / Math.PI) * 0.6;
         if (speed < 30) {
           vx = 0; vy = 0; omega = 0;
-          // On its back: upside down relative to gravity.
-          const onBack = (Math.atan2(gravity.x, gravity.y) * 180) / Math.PI + 180;
-          angle += (((onBack - angle + 540) % 360) - 180) * 0.25;
+          // Settle upright relative to gravity (feet toward the surface), so
+          // the dazed face above it stays visible rather than under the floor.
+          const upright = (Math.atan2(-gravity.x, gravity.y) * 180) / Math.PI;
+          angle += (((upright - angle + 540) % 360) - 180) * 0.25;
           still += dt;
         } else {
           still = 0;
