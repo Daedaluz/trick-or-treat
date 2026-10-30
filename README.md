@@ -12,6 +12,10 @@ archive table and sign-up closes until next season. Only the browser that
 registered a door can remove it (a secret token is kept in `localStorage`), so
 there are no accounts.
 
+Easter eggs: now and then a spider drops in. Shake your phone (iPhones ask
+for motion access the first time you tap the ghost) or tap the ghost three
+times, and its thread snaps.
+
 ## Stack
 
 - **Backend:** Go, [cobra](https://github.com/spf13/cobra) + [viper](https://github.com/spf13/viper) CLI, [gin](https://github.com/gin-gonic/gin) router, PostgreSQL via [pgx](https://github.com/jackc/pgx)

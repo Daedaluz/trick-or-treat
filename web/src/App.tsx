@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   api,
   distanceM,
@@ -17,6 +17,7 @@ import DoorList from "./components/DoorList";
 import FeedbackPanel from "./components/FeedbackPanel";
 import OffSeasonPanel from "./components/OffSeasonPanel";
 import Spider from "./components/Spider";
+import { fakeShake, requestMotionPermission } from "./shake";
 
 export type LatLng = { lat: number; lng: number };
 type Mode = "browse" | "add" | "feedback";
@@ -43,6 +44,19 @@ export default function App() {
       return "satellite";
     }
   });
+
+  // Header ghost: a tap asks for motion permission where needed (iOS), and
+  // three quick taps shake the spider loose without a phone.
+  const ghostTaps = useRef<number[]>([]);
+  function onGhostTap() {
+    void requestMotionPermission();
+    const now = Date.now();
+    ghostTaps.current = [...ghostTaps.current.filter((t) => now - t < 800), now];
+    if (ghostTaps.current.length >= 3) {
+      ghostTaps.current = [];
+      fakeShake();
+    }
+  }
 
   function toggleBasemap() {
     const next: Basemap = basemap === "satellite" ? "streets" : "satellite";
@@ -201,7 +215,10 @@ export default function App() {
 
       <header className="topbar">
         <h1>
-          <img src="/icons/ghost.svg" alt="" width="28" height="28" /> Trick or Treat
+          <button type="button" className="ghost-btn" onClick={onGhostTap} aria-label="Boo" title="Boo!">
+            <img src="/icons/ghost.svg" alt="" width="28" height="28" />
+          </button>{" "}
+          Trick or Treat
         </h1>
         <div className="topbar-actions">
           <button

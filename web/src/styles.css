@@ -66,6 +66,8 @@ button { cursor: pointer; }
 }
 .topbar > * { pointer-events: auto; }
 .topbar h1 { margin: 0; font-size: 20px; display: flex; align-items: center; gap: 8px; text-shadow: 0 1px 3px rgba(0,0,0,.7); }
+.ghost-btn { background: none; border: none; padding: 0; display: flex; -webkit-tap-highlight-color: transparent; }
+.ghost-btn:active img { transform: scale(.9) rotate(-10deg); }
 .topbar-actions { display: flex; gap: 8px; }
 .icon-btn {
   width: 44px; height: 44px; border-radius: 50%; border: none;
@@ -230,10 +232,10 @@ button { cursor: pointer; }
   animation: spider-thread var(--dur) ease-in-out forwards;
 }
 .spider .body {
-  font-size: 30px; line-height: 1; transform: translate(-50%, -20%);
+  position: relative; font-size: 30px; line-height: 1; transform: translate(-50%, -20%);
   filter: drop-shadow(0 0 2px rgba(255,255,255,.7)) drop-shadow(0 3px 3px rgba(0,0,0,.6));
-  animation: spider-wiggle .35s ease-in-out infinite alternate;
 }
+.spider .legs { display: inline-block; animation: spider-wiggle .35s ease-in-out infinite alternate; }
 /* drop (0-30%), dangle (30-55%), scurry sideways off-screen (55-100%) */
 @keyframes spider-move {
   0%   { transform: translate(0, -60px); }
@@ -250,4 +252,44 @@ button { cursor: pointer; }
   from { rotate: -8deg; }
   to   { rotate: 8deg; }
 }
+/* Shaken loose: thread snaps, spider plummets, bounces, lies dazed, flips, runs */
+.spider.fall { animation: spider-fall var(--dur) linear forwards; }
+.spider.fall .thread { animation: spider-thread-snap var(--dur) linear forwards; }
+.spider.fall .body { animation: spider-tumble var(--dur) linear forwards; }
+.spider .dazed {
+  position: absolute; left: 50%; top: -26px; transform: translateX(-50%);
+  font-size: 18px; opacity: 0; animation: spider-dazed var(--dur) linear forwards;
+}
+@keyframes spider-fall {
+  0%   { transform: translate(0, var(--drop)); }
+  6%   { transform: translate(0, calc(var(--drop) - 8px)); }           /* twang */
+  30%  { transform: translate(0, calc(100vh - 44px)); animation-timing-function: ease-out; }
+  36%  { transform: translate(0, calc(100vh - 90px)); animation-timing-function: ease-in; }
+  42%  { transform: translate(0, calc(100vh - 44px)); }
+  46%  { transform: translate(0, calc(100vh - 58px)); }
+  50%  { transform: translate(0, calc(100vh - 44px)); }
+  78%  { transform: translate(0, calc(100vh - 44px)); }
+  100% { transform: translate(calc(var(--dir) * 120vw), calc(100vh - 44px)); }
+}
+@keyframes spider-thread-snap {
+  0%, 6% { opacity: 1; transform: scaleY(1); }
+  9%     { opacity: 1; transform: scaleY(.3) rotate(6deg); }
+  14%, 100% { opacity: 0; }
+}
+@keyframes spider-tumble {
+  0%, 8%  { rotate: 0deg; }
+  30%     { rotate: 540deg; }                      /* tumbling on the way down */
+  42%     { rotate: 180deg; }                      /* lands on its back */
+  50%, 76% { rotate: 180deg; }                     /* lies there, dazed */
+  80%     { rotate: 160deg; }
+  84%     { rotate: 0deg; }                        /* flips upright */
+  100%    { rotate: 0deg; }
+}
+@keyframes spider-dazed {
+  0%, 44% { opacity: 0; }
+  50%, 76% { opacity: 1; transform: translateX(-50%) translateY(-6px) rotate(10deg); }
+  82%, 100% { opacity: 0; }
+}
+.spider.fall .legs { animation-duration: .18s; }
+
 @media (prefers-reduced-motion: reduce) { .spider { display: none; } }
