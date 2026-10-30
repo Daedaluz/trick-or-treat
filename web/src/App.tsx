@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { api, distanceM, loadMyDoors, saveMyDoors, type Door, type MyDoor, type NewDoor } from "./api";
-import MapView from "./components/MapView";
+import MapView, { type Basemap } from "./components/MapView";
 import AddDoorPanel from "./components/AddDoorPanel";
 import DoorList from "./components/DoorList";
 
@@ -18,6 +18,23 @@ export default function App() {
   const [selected, setSelected] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [basemap, setBasemap] = useState<Basemap>(() => {
+    try {
+      return localStorage.getItem("trick-or-treat:basemap") === "streets" ? "streets" : "satellite";
+    } catch {
+      return "satellite";
+    }
+  });
+
+  function toggleBasemap() {
+    const next: Basemap = basemap === "satellite" ? "streets" : "satellite";
+    setBasemap(next);
+    try {
+      localStorage.setItem("trick-or-treat:basemap", next);
+    } catch {
+      /* ignore */
+    }
+  }
 
   const refresh = useCallback(async () => {
     try {
@@ -112,6 +129,7 @@ export default function App() {
   return (
     <div className="app">
       <MapView
+        basemap={basemap}
         doors={doors}
         me={me}
         myIds={myIds}
@@ -126,9 +144,19 @@ export default function App() {
         <h1>
           <img src="/pumpkin.svg" alt="" width="28" height="28" /> Trick or Treat
         </h1>
-        <button className="icon-btn" onClick={locate} disabled={locating} title="Find me" aria-label="Find me">
-          {locating ? "…" : "◎"}
-        </button>
+        <div className="topbar-actions">
+          <button
+            className="icon-btn"
+            onClick={toggleBasemap}
+            title={basemap === "satellite" ? "Switch to street map" : "Switch to satellite"}
+            aria-label={basemap === "satellite" ? "Switch to street map" : "Switch to satellite"}
+          >
+            {basemap === "satellite" ? "🗺️" : "🛰️"}
+          </button>
+          <button className="icon-btn" onClick={locate} disabled={locating} title="Find me" aria-label="Find me">
+            {locating ? "…" : "◎"}
+          </button>
+        </div>
       </header>
 
       {error && (

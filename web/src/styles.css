@@ -34,11 +34,22 @@ button { cursor: pointer; }
 .pumpkin.active { transform: scale(1.35); }
 .pumpkin.mine { filter: drop-shadow(0 0 6px var(--accent)); }
 .pumpkin.draft { font-size: 30px; }
+.pumpkin { position: relative; }
+.pumpkin .badge {
+  position: absolute; top: -4px; right: -6px;
+  min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px;
+  background: var(--text); color: var(--accent-ink);
+  font: 700 12px/18px system-ui, sans-serif; text-align: center;
+}
 .leaflet-popup-content-wrapper, .leaflet-popup-tip {
   background: var(--panel); color: var(--text);
 }
 .leaflet-popup-content { margin: 10px 14px; font-size: 14px; }
-.leaflet-popup-content .note { color: var(--muted); margin-top: 4px; }
+.leaflet-popup-content .note { color: var(--muted); margin-top: 2px; }
+.leaflet-popup-content .muted { color: var(--muted); font-size: 12px; }
+.popup-doors { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-height: 40vh; overflow-y: auto; }
+.popup-doors li { border-top: 1px solid rgba(255,255,255,.1); padding-top: 6px; }
+.popup-doors li:first-child { border-top: none; padding-top: 0; }
 .leaflet-container a.leaflet-popup-close-button { color: var(--muted); }
 .leaflet-control-attribution { font-size: 10px; background: rgba(26,15,46,.7) !important; color: var(--muted) !important; }
 .leaflet-control-attribution a { color: var(--accent) !important; }
@@ -53,6 +64,7 @@ button { cursor: pointer; }
 }
 .topbar > * { pointer-events: auto; }
 .topbar h1 { margin: 0; font-size: 20px; display: flex; align-items: center; gap: 8px; text-shadow: 0 1px 3px rgba(0,0,0,.7); }
+.topbar-actions { display: flex; gap: 8px; }
 .icon-btn {
   width: 44px; height: 44px; border-radius: 50%; border: none;
   background: var(--panel); color: var(--text); font-size: 22px;

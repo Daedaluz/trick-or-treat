@@ -26,6 +26,7 @@ type Door struct {
 	Lat       float64   `json:"lat"`
 	Lng       float64   `json:"lng"`
 	Address   string    `json:"address"`
+	Unit      string    `json:"unit,omitempty"`
 	Note      string    `json:"note,omitempty"`
 	OpenFrom  string    `json:"open_from,omitempty"`
 	OpenTo    string    `json:"open_to,omitempty"`
@@ -110,7 +111,7 @@ func (s *Store) Migrate(ctx context.Context) error {
 // ListDoors returns all doors registered for the given year.
 func (s *Store) ListDoors(ctx context.Context, year int) ([]Door, error) {
 	rows, err := s.pool.Query(ctx,
-		`SELECT id, lat, lng, address, note, open_from, open_to, year, created_at
+		`SELECT id, lat, lng, address, unit, note, open_from, open_to, year, created_at
 		 FROM doors WHERE year = $1 ORDER BY created_at DESC`, year)
 	if err != nil {
 		return nil, err
@@ -128,9 +129,9 @@ func (s *Store) ListDoors(ctx context.Context, year int) ([]Door, error) {
 // CreateDoor inserts a door. tokenHash is the hash of the owner's secret.
 func (s *Store) CreateDoor(ctx context.Context, d Door, tokenHash string) error {
 	_, err := s.pool.Exec(ctx,
-		`INSERT INTO doors (id, lat, lng, address, note, open_from, open_to, year, token_hash, created_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
-		d.ID, d.Lat, d.Lng, d.Address, d.Note, d.OpenFrom, d.OpenTo, d.Year, tokenHash, d.CreatedAt)
+		`INSERT INTO doors (id, lat, lng, address, unit, note, open_from, open_to, year, token_hash, created_at)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+		d.ID, d.Lat, d.Lng, d.Address, d.Unit, d.Note, d.OpenFrom, d.OpenTo, d.Year, tokenHash, d.CreatedAt)
 	return err
 }
 

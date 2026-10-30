@@ -1,10 +1,11 @@
 name: CI
 
+# Runs only on demand or on version tags: the account's Actions minutes are
+# limited, so day-to-day builds happen locally with `make image push`.
 on:
+  workflow_dispatch:
   push:
-    branches: [main]
     tags: ["v*"]
-  pull_request:
 
 permissions:
   contents: read
@@ -34,7 +35,6 @@ jobs:
 
   image:
     needs: check
-    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

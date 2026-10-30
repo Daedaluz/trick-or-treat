@@ -1,4 +1,4 @@
-import { distanceM, formatDistance, type Door } from "../api";
+import { distanceM, doorLabel, formatDistance, hoursLabel, type Door } from "../api";
 import type { LatLng } from "../App";
 
 interface Props {
@@ -23,14 +23,10 @@ export default function DoorList({ doors, me, myIds, selected, onFocus, onRemove
             <button type="button" className="door" onClick={() => onFocus(d)}>
               <span className="emoji">🎃</span>
               <span className="body">
-                <span className="addr">{d.address}</span>
+                <span className="addr">{doorLabel(d)}</span>
                 <span className="meta">
                   {me && <span>{formatDistance(distanceM(me, d))}</span>}
-                  {(d.open_from || d.open_to) && (
-                    <span>
-                      {d.open_from || "…"}–{d.open_to || "…"}
-                    </span>
-                  )}
+                  {hoursLabel(d) && <span>{hoursLabel(d)}</span>}
                   {mine && <span className="tag">yours</span>}
                 </span>
                 {d.note && <span className="note">{d.note}</span>}

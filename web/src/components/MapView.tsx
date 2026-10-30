@@ -1,13 +1,13 @@
 import { useEffect } from "react";
 import L from "leaflet";
 import { CircleMarker, MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
-import type { Door } from "../api";
+import { groupByBuilding, hoursLabel, type Door } from "../api";
 import type { LatLng } from "../App";
 
-const pumpkinIcon = (mine: boolean, active: boolean) =>
+const pumpkinIcon = (mine: boolean, active: boolean, count: number) =>
   L.divIcon({
     className: `pumpkin ${mine ? "mine" : ""} ${active ? "active" : ""}`,
-    html: "🎃",
+    html: count > 1 ? `🎃<span class="badge">${count}</span>` : "🎃",
     iconSize: [32, 32],
     iconAnchor: [16, 28],
     popupAnchor: [0, -24],
@@ -20,7 +20,10 @@ const draftIcon = L.divIcon({
   iconAnchor: [16, 30],
 });
 
+export type Basemap = "satellite" | "streets";
+
 interface Props {
+  basemap: Basemap;
   doors: Door[];
   me: LatLng | null;
   myIds: Set<string>;
@@ -37,11 +40,37 @@ const DEFAULT_CENTER: LatLng = { lat: 59.33, lng: 18.07 };
 export default function MapView(props: Props) {
   return (
     <MapContainer center={DEFAULT_CENTER} zoom={12} zoomControl={false} className="map">
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-        maxZoom={19}
-      />
+      {props.basemap === "satellite" ? (
+        <>
+          <TileLayer
+            key="sat"
+            attribution="Imagery &copy; Esri, Maxar, Earthstar Geographics"
+            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+            maxZoom={19}
+            maxNativeZoom={18}
+          />
+          <TileLayer
+            key="sat-roads"
+            attribution="Roads &copy; Esri, HERE, Garmin, OpenStreetMap contributors"
+            url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}"
+            maxZoom={19}
+            pane="shadowPane"
+          />
+          <TileLayer
+            key="sat-places"
+            url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
+            maxZoom={19}
+            pane="shadowPane"
+          />
+        </>
+      ) : (
+        <TileLayer
+          key="osm"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+          maxZoom={19}
+        />
+      )}
       <Controller {...props} />
       {props.me && (
         <CircleMarker
@@ -50,24 +79,32 @@ export default function MapView(props: Props) {
           pathOptions={{ color: "#fff", weight: 2, fillColor: "#3b82f6", fillOpacity: 1 }}
         />
       )}
-      {props.doors.map((d) => (
-        <Marker
-          key={d.id}
-          position={d}
-          icon={pumpkinIcon(props.myIds.has(d.id), props.selected === d.id)}
-          eventHandlers={{ click: () => props.onSelect(d.id) }}
-        >
-          <Popup>
-            <strong>{d.address}</strong>
-            {(d.open_from || d.open_to) && (
-              <div>
-                Open {d.open_from || "…"} – {d.open_to || "…"}
-              </div>
-            )}
-            {d.note && <div className="note">{d.note}</div>}
-          </Popup>
-        </Marker>
-      ))}
+      {groupByBuilding(props.doors).map((b) => {
+        const mine = b.doors.some((d) => props.myIds.has(d.id));
+        const active = b.doors.some((d) => d.id === props.selected);
+        return (
+          <Marker
+            key={b.key}
+            position={b}
+            icon={pumpkinIcon(mine, active, b.doors.length)}
+            eventHandlers={{ click: () => props.onSelect(b.doors[0].id) }}
+          >
+            <Popup>
+              <strong>{b.address}</strong>
+              {b.doors.length > 1 && <div className="muted">{b.doors.length} doors in this building</div>}
+              <ul className="popup-doors">
+                {b.doors.map((d) => (
+                  <li key={d.id}>
+                    {d.unit && <strong>{d.unit}</strong>}
+                    {hoursLabel(d) && <span> {hoursLabel(d)}</span>}
+                    {d.note && <div className="note">{d.note}</div>}
+                  </li>
+                ))}
+              </ul>
+            </Popup>
+          </Marker>
+        );
+      })}
       {props.draft && props.onDraftMove && (
         <Marker
           position={props.draft}
@@ -114,12 +151,16 @@ function Controller({ flyTo, onDraftMove, selected, onSelect }: Props) {
 
   useEffect(() => {
     if (!selected) return;
-    // Open the popup of the selected marker, if it is on the map.
-    map.eachLayer((layer) => {
-      if (layer instanceof L.Marker && layer.getElement()?.classList.contains("active")) {
-        layer.openPopup();
-      }
-    });
+    // Open the popup of the selected marker. Marker icons are updated in the
+    // markers' own effects, which run after this one, so wait a tick.
+    const t = window.setTimeout(() => {
+      map.eachLayer((layer) => {
+        if (layer instanceof L.Marker && layer.getElement()?.classList.contains("active")) {
+          layer.openPopup();
+        }
+      });
+    }, 0);
+    return () => window.clearTimeout(t);
   }, [selected, map]);
 
   return null;

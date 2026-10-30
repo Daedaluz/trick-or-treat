@@ -1,7 +1,7 @@
 IMAGE ?= ghcr.io/daedaluz/trick-or-treat
 TAG   ?= dev
 
-.PHONY: all web build run dev-db test lint image helm-lint helm-template
+.PHONY: all web build run dev-db test lint image push helm-lint helm-template
 
 all: web build
 
@@ -27,6 +27,10 @@ lint:
 
 image:
 	docker build -t $(IMAGE):$(TAG) .
+
+# Needs `docker login ghcr.io` with a token that has write:packages.
+push: image
+	docker push $(IMAGE):$(TAG)
 
 helm-lint:
 	helm lint deploy/helm/trick-or-treat

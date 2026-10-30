@@ -3,6 +3,7 @@ export interface Door {
   lat: number;
   lng: number;
   address: string;
+  unit?: string;
   note?: string;
   open_from?: string;
   open_to?: string;
@@ -20,9 +21,44 @@ export interface NewDoor {
   lat: number;
   lng: number;
   address: string;
+  unit: string;
   note: string;
   open_from: string;
   open_to: string;
+}
+
+/** Doors standing at (practically) the same spot: one building, several households. */
+export interface Building {
+  key: string;
+  lat: number;
+  lng: number;
+  address: string;
+  doors: Door[];
+}
+
+export function groupByBuilding(doors: Door[]): Building[] {
+  const map = new Map<string, Building>();
+  for (const d of doors) {
+    // ~1 m precision; geocoded addresses land on identical coordinates anyway.
+    const key = `${d.lat.toFixed(5)},${d.lng.toFixed(5)}`;
+    let b = map.get(key);
+    if (!b) {
+      b = { key, lat: d.lat, lng: d.lng, address: d.address, doors: [] };
+      map.set(key, b);
+    }
+    b.doors.push(d);
+  }
+  for (const b of map.values()) b.doors.sort((a, c) => (a.unit ?? "").localeCompare(c.unit ?? "", undefined, { numeric: true }));
+  return [...map.values()];
+}
+
+export function doorLabel(d: Door): string {
+  return d.unit ? `${d.address} · ${d.unit}` : d.address;
+}
+
+export function hoursLabel(d: Door): string | null {
+  if (!d.open_from && !d.open_to) return null;
+  return `${d.open_from || "…"}–${d.open_to || "…"}`;
 }
 
 async function check<T>(res: Response): Promise<T> {

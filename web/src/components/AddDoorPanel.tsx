@@ -14,6 +14,7 @@ export default function AddDoorPanel({ draft, onDraftChange, onSubmit, onCancel 
   const [results, setResults] = useState<GeocodeResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [address, setAddress] = useState("");
+  const [unit, setUnit] = useState("");
   const [note, setNote] = useState("");
   const [openFrom, setOpenFrom] = useState("17:00");
   const [openTo, setOpenTo] = useState("20:00");
@@ -62,7 +63,7 @@ export default function AddDoorPanel({ draft, onDraftChange, onSubmit, onCancel 
     setBusy(true);
     setError(null);
     try {
-      await onSubmit({ lat: draft.lat, lng: draft.lng, address: address.trim(), note: note.trim(), open_from: openFrom, open_to: openTo });
+      await onSubmit({ lat: draft.lat, lng: draft.lng, address: address.trim(), unit: unit.trim(), note: note.trim(), open_from: openFrom, open_to: openTo });
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -112,6 +113,16 @@ export default function AddDoorPanel({ draft, onDraftChange, onSubmit, onCancel 
       <label>
         Address shown to visitors
         <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Pumpkin Lane 13" maxLength={300} required />
+      </label>
+
+      <label>
+        Apartment / floor (optional)
+        <input
+          value={unit}
+          onChange={(e) => setUnit(e.target.value)}
+          placeholder="Apt 1203, 3rd floor — for buildings with several households"
+          maxLength={100}
+        />
       </label>
 
       <div className="row">
