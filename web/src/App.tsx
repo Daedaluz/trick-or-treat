@@ -31,6 +31,7 @@ export default function App() {
   const [locating, setLocating] = useState(false);
   const [mode, setMode] = useState<Mode>("browse");
   const [draft, setDraft] = useState<LatLng | null>(null);
+  const [editing, setEditing] = useState<Door | null>(null);
   const [flyTo, setFlyTo] = useState<{ target: LatLng; zoom?: number; n: number } | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(true);
@@ -122,14 +123,30 @@ export default function App() {
   const visitedCount = useMemo(() => doors.filter((d) => visited.has(d.id)).length, [doors, visited]);
 
   async function submitDoor(d: NewDoor) {
-    const res = await api.createDoor(d);
-    const next = [...myDoors, { id: res.door.id, token: res.token }];
-    setMyDoors(next);
-    saveMyDoors(next);
+    if (editing) {
+      const mine = myDoors.find((m) => m.id === editing.id);
+      if (!mine) throw new Error("This browser does not hold the key for that door.");
+      const updated = await api.updateDoor(editing.id, mine.token, d);
+      setSelected(updated.id);
+    } else {
+      const res = await api.createDoor(d);
+      const next = [...myDoors, { id: res.door.id, token: res.token }];
+      setMyDoors(next);
+      saveMyDoors(next);
+      setSelected(res.door.id);
+    }
     setMode("browse");
     setDraft(null);
-    setSelected(res.door.id);
+    setEditing(null);
     await refresh();
+  }
+
+  function startEdit(d: Door) {
+    setEditing(d);
+    setDraft({ lat: d.lat, lng: d.lng });
+    setMode("add");
+    setSheetOpen(true);
+    setFlyTo((f) => ({ target: d, zoom: 17, n: (f?.n ?? 0) + 1 }));
   }
 
   async function removeDoor(id: string) {
@@ -158,6 +175,7 @@ export default function App() {
   }
 
   function startAdd() {
+    setEditing(null);
     setMode("add");
     setSheetOpen(true);
     setDraft(me ?? null);
@@ -221,6 +239,8 @@ export default function App() {
           </>
         ) : mode === "add" ? (
           <AddDoorPanel
+            key={editing?.id ?? "new"}
+            initial={editing ?? undefined}
             draft={draft}
             onDraftChange={(p) => {
               setDraft(p);
@@ -230,6 +250,7 @@ export default function App() {
             onCancel={() => {
               setMode("browse");
               setDraft(null);
+              setEditing(null);
             }}
           />
         ) : (
@@ -258,6 +279,7 @@ export default function App() {
               visited={visited}
               selected={selected}
               onFocus={focusDoor}
+              onEdit={startEdit}
               onRemove={removeDoor}
               onToggleVisited={toggleVisited}
             />

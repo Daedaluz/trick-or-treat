@@ -136,6 +136,24 @@ func (s *Store) CreateDoor(ctx context.Context, d Door, tokenHash string) error 
 	return err
 }
 
+// UpdateDoor replaces the editable fields of a door when id and token hash
+// match. The year and creation time are kept.
+func (s *Store) UpdateDoor(ctx context.Context, id, tokenHash string, d Door) (Door, error) {
+	rows, err := s.pool.Query(ctx,
+		`UPDATE doors SET lat = $3, lng = $4, address = $5, unit = $6, intercom_name = $7, note = $8, open_from = $9, open_to = $10
+		 WHERE id = $1 AND token_hash = $2
+		 RETURNING id, lat, lng, address, unit, intercom_name, note, open_from, open_to, year, created_at`,
+		id, tokenHash, d.Lat, d.Lng, d.Address, d.Unit, d.Intercom, d.Note, d.OpenFrom, d.OpenTo)
+	if err != nil {
+		return Door{}, err
+	}
+	out, err := pgx.CollectOneRow(rows, pgx.RowToStructByPos[Door])
+	if errors.Is(err, pgx.ErrNoRows) {
+		return Door{}, ErrNotFound
+	}
+	return out, err
+}
+
 // DeleteDoor removes a door when id and token hash match.
 func (s *Store) DeleteDoor(ctx context.Context, id, tokenHash string) error {
 	tag, err := s.pool.Exec(ctx, `DELETE FROM doors WHERE id = $1 AND token_hash = $2`, id, tokenHash)
@@ -179,6 +197,20 @@ func (s *Store) LiveYears(ctx context.Context) ([]int, error) {
 		return nil, err
 	}
 	return pgx.CollectRows(rows, pgx.RowTo[int])
+}
+
+// CountDoors returns how many doors are live for the given year.
+func (s *Store) CountDoors(ctx context.Context, year int) (int, error) {
+	var n int
+	err := s.pool.QueryRow(ctx, `SELECT count(*) FROM doors WHERE year = $1`, year).Scan(&n)
+	return n, err
+}
+
+// CountFeedback returns how many feedback messages are stored.
+func (s *Store) CountFeedback(ctx context.Context) (int, error) {
+	var n int
+	err := s.pool.QueryRow(ctx, `SELECT count(*) FROM feedback`).Scan(&n)
+	return n, err
 }
 
 // CountArchived returns how many doors were archived for the given year.

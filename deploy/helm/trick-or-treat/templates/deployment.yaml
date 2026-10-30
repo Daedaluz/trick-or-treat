@@ -41,6 +41,8 @@ spec:
           env:
             - name: TOT_LISTEN
               value: ":8080"
+            - name: TOT_METRICS_LISTEN
+              value: {{ if .Values.metrics.enabled }}":9090"{{ else }}""{{ end }}
             - name: TOT_LOG_JSON
               value: {{ .Values.config.logJSON | quote }}
             - name: TOT_TRUST_PROXY
@@ -73,6 +75,11 @@ spec:
             - name: http
               containerPort: 8080
               protocol: TCP
+            {{- if .Values.metrics.enabled }}
+            - name: metrics
+              containerPort: 9090
+              protocol: TCP
+            {{- end }}
           livenessProbe:
             httpGet:
               path: /healthz

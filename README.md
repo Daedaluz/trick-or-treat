@@ -40,6 +40,7 @@ Every flag can be set as an env var with the `TOT_` prefix, or in a file passed 
 | `--user-agent`   | `TOT_USER_AGENT`    | `trick-or-treat/0.1 (…)`                  |
 | `--log-json`     | `TOT_LOG_JSON`      | `false`                                   |
 | `--trust-proxy`  | `TOT_TRUST_PROXY`   | `true`                                    |
+| `--metrics-listen` | `TOT_METRICS_LISTEN` | `:9090` (Prometheus `/metrics`, internal only) |
 | `--admin-token`  | `TOT_ADMIN_TOKEN`   | empty (admin endpoints disabled)          |
 | `--season.signup-opens`     | `TOT_SEASON_SIGNUP_OPENS`     | `10-01` (MM-DD)   |
 | `--season.event-date`       | `TOT_SEASON_EVENT_DATE`       | `10-31` (MM-DD)   |
@@ -69,11 +70,26 @@ season:
 | `GET`    | `/api/season`     | Phase (`before`/`open`/`after`), dates, last season's door count |
 | `GET`    | `/api/doors`      | Doors registered for the current year                    |
 | `POST`   | `/api/doors`      | Register a door; `403` while sign-up is closed           |
+| `PUT`    | `/api/doors/{id}` | Edit a door; needs the `X-Door-Token` header             |
 | `DELETE` | `/api/doors/{id}` | Remove a door; needs the `X-Door-Token` header           |
 | `GET`    | `/api/geocode?q=` | Address search (Nominatim proxy)                         |
 | `POST`   | `/api/feedback`   | Leave feedback (5 per hour per IP); write-only           |
 | `GET`    | `/api/admin/feedback` | Read feedback; needs `Authorization: Bearer <admin token>` and only exists when `--admin-token` is set |
 | `GET`    | `/healthz`, `/readyz` | Probes                                               |
+
+## Metrics and Grafana
+
+The server exposes Prometheus metrics on a separate port (`:9090`, never routed
+publicly): request rate and latency by route, page loads, doors registered,
+feedback submitted, plus live gauges for doors on the map and stored feedback.
+
+- `metrics.serviceMonitor.enabled=true` (with the labels your Prometheus
+  operator selects on, e.g. `release: kube-prometheus`) gets it scraped.
+- A ready-made dashboard lives in
+  [`deploy/helm/trick-or-treat/dashboards/trick-or-treat.json`](deploy/helm/trick-or-treat/dashboards/trick-or-treat.json).
+  Import it in Grafana (Dashboards → New → Import) and pick your Prometheus
+  datasource, or set `metrics.grafanaDashboard.enabled=true` if Grafana runs
+  the dashboard sidecar.
 
 ## Reading feedback
 

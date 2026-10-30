@@ -101,6 +101,13 @@ export const api = {
       body: JSON.stringify(d),
     }).then((r) => check<{ door: Door; token: string }>(r)),
 
+  updateDoor: (id: string, token: string, d: NewDoor) =>
+    fetch(`/api/doors/${encodeURIComponent(id)}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", "X-Door-Token": token },
+      body: JSON.stringify(d),
+    }).then((r) => check<Door>(r)),
+
   deleteDoor: (id: string, token: string) =>
     fetch(`/api/doors/${encodeURIComponent(id)}`, {
       method: "DELETE",

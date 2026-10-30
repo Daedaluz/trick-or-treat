@@ -58,6 +58,22 @@ service:
   type: ClusterIP
   port: 80
 
+# Prometheus metrics on a separate port (9090) that is not routed publicly.
+metrics:
+  enabled: true
+  serviceMonitor:
+    enabled: false
+    interval: 30s
+    # kube-prometheus-stack only picks up monitors carrying its release label.
+    labels: {}
+    #  release: kube-prometheus
+  # Ship the bundled dashboard as a ConfigMap for the Grafana sidecar.
+  grafanaDashboard:
+    enabled: false
+    namespace: ""
+    label: grafana_dashboard
+    labelValue: "1"
+
 # Gateway API HTTPRoute. Requires a Gateway in the cluster.
 httpRoute:
   enabled: true

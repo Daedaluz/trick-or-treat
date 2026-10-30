@@ -1,0 +1,16 @@
+{{- if and .Values.metrics.enabled .Values.metrics.grafanaDashboard.enabled }}
+# Picked up by the Grafana sidecar when it is enabled and watches this label.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "trick-or-treat.fullname" . }}-dashboard
+  {{- with .Values.metrics.grafanaDashboard.namespace }}
+  namespace: {{ . }}
+  {{- end }}
+  labels:
+    {{- include "trick-or-treat.labels" . | nindent 4 }}
+    {{ .Values.metrics.grafanaDashboard.label }}: {{ .Values.metrics.grafanaDashboard.labelValue | quote }}
+data:
+  trick-or-treat.json: |-
+{{ .Files.Get "dashboards/trick-or-treat.json" | indent 4 }}
+{{- end }}

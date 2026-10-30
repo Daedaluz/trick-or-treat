@@ -14,6 +14,7 @@ import (
 
 	"github.com/Daedaluz/trick-or-treat/internal/api"
 	"github.com/Daedaluz/trick-or-treat/internal/config"
+	"github.com/Daedaluz/trick-or-treat/internal/metrics"
 	"github.com/Daedaluz/trick-or-treat/internal/season"
 	"github.com/Daedaluz/trick-or-treat/internal/store"
 )
@@ -45,9 +46,27 @@ var serveCmd = &cobra.Command{
 		}
 		go sea.RunArchiver(ctx, st, cfg.Season.ArchiveInterval, log)
 
+		var m *metrics.Metrics
+		if cfg.MetricsAddr != "" {
+			m = metrics.New(st, func() int { return sea.Year(time.Now()) }, log)
+			mux := http.NewServeMux()
+			mux.Handle("/metrics", m.Handler())
+			msrv := &http.Server{Addr: cfg.MetricsAddr, Handler: mux, ReadHeaderTimeout: 5 * time.Second}
+			go func() {
+				<-ctx.Done()
+				_ = msrv.Close()
+			}()
+			go func() {
+				log.Info("metrics listening", "addr", cfg.MetricsAddr)
+				if err := msrv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+					log.Error("metrics server", "err", err)
+				}
+			}()
+		}
+
 		srv := &http.Server{
 			Addr:              cfg.Listen,
-			Handler:           api.New(st, cfg, sea, log),
+			Handler:           api.New(st, cfg, sea, m, log),
 			ReadHeaderTimeout: 5 * time.Second,
 		}
 		go func() {

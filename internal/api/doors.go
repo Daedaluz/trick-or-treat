@@ -50,20 +50,14 @@ type createDoorRequest struct {
 	OpenTo   string  `json:"open_to"`
 }
 
-// createDoor registers a door and returns a one-time secret token the owner
-// can use to remove it later.
-func (h *handler) createDoor(c *gin.Context) {
-	now := time.Now()
-	if st := h.season.State(now); !st.SignupOpen {
-		c.JSON(http.StatusForbidden, gin.H{"error": st.Reason, "season": st})
-		return
-	}
-
+// bindDoor parses and validates a door body shared by create and update.
+// It writes the error response itself and returns false on failure.
+func bindDoor(c *gin.Context) (createDoorRequest, bool) {
 	var req createDoorRequest
 	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 1<<16)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid JSON"})
-		return
+		return req, false
 	}
 	req.Address = strings.TrimSpace(req.Address)
 	req.Unit = strings.TrimSpace(req.Unit)
@@ -73,15 +67,30 @@ func (h *handler) createDoor(c *gin.Context) {
 	switch {
 	case req.Address == "":
 		c.JSON(http.StatusBadRequest, gin.H{"error": "address is required"})
-		return
+		return req, false
 	case len(req.Address) > 300 || len(req.Unit) > 100 || len(req.Intercom) > 100 || len(req.Note) > 500:
 		c.JSON(http.StatusBadRequest, gin.H{"error": "a field is too long"})
-		return
+		return req, false
 	case req.Lat < -90 || req.Lat > 90 || req.Lng < -180 || req.Lng > 180 || (req.Lat == 0 && req.Lng == 0):
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid coordinates"})
-		return
+		return req, false
 	case !validClock(req.OpenFrom) || !validClock(req.OpenTo):
 		c.JSON(http.StatusBadRequest, gin.H{"error": "times must look like HH:MM"})
+		return req, false
+	}
+	return req, true
+}
+
+// createDoor registers a door and returns a one-time secret token the owner
+// can use to edit or remove it later.
+func (h *handler) createDoor(c *gin.Context) {
+	now := time.Now()
+	if st := h.season.State(now); !st.SignupOpen {
+		c.JSON(http.StatusForbidden, gin.H{"error": st.Reason, "season": st})
+		return
+	}
+	req, ok := bindDoor(c)
+	if !ok {
 		return
 	}
 
@@ -104,7 +113,40 @@ func (h *handler) createDoor(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
 		return
 	}
+	if h.metrics != nil {
+		h.metrics.DoorRegistered()
+	}
 	c.JSON(http.StatusCreated, gin.H{"door": d, "token": token})
+}
+
+// updateDoor lets the owner change a door's details with the token from createDoor.
+func (h *handler) updateDoor(c *gin.Context) {
+	token := c.GetHeader("X-Door-Token")
+	if token == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "missing X-Door-Token header"})
+		return
+	}
+	if st := h.season.State(time.Now()); !st.SignupOpen {
+		c.JSON(http.StatusForbidden, gin.H{"error": st.Reason, "season": st})
+		return
+	}
+	req, ok := bindDoor(c)
+	if !ok {
+		return
+	}
+	d, err := h.store.UpdateDoor(c.Request.Context(), c.Param("id"), hashToken(token), store.Door{
+		Lat: req.Lat, Lng: req.Lng, Address: req.Address, Unit: req.Unit,
+		Intercom: req.Intercom, Note: req.Note, OpenFrom: req.OpenFrom, OpenTo: req.OpenTo,
+	})
+	switch {
+	case errors.Is(err, store.ErrNotFound):
+		c.JSON(http.StatusNotFound, gin.H{"error": "no door with that id and token"})
+	case err != nil:
+		h.log.Error("update door", "err", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+	default:
+		c.JSON(http.StatusOK, d)
+	}
 }
 
 // deleteDoor removes a door if the caller presents the token from createDoor.

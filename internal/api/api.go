@@ -10,16 +10,18 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/Daedaluz/trick-or-treat/internal/config"
+	"github.com/Daedaluz/trick-or-treat/internal/metrics"
 	"github.com/Daedaluz/trick-or-treat/internal/season"
 	"github.com/Daedaluz/trick-or-treat/internal/store"
 	"github.com/Daedaluz/trick-or-treat/web"
 )
 
 type handler struct {
-	store  *store.Store
-	cfg    *config.Config
-	season *season.Season
-	log    *slog.Logger
+	store   *store.Store
+	cfg     *config.Config
+	season  *season.Season
+	metrics *metrics.Metrics
+	log     *slog.Logger
 
 	geoClient *http.Client
 	geoMu     sync.Mutex // Nominatim allows at most one request per second.
@@ -29,10 +31,13 @@ type handler struct {
 }
 
 // New builds the gin engine with API routes and the embedded SPA.
-func New(st *store.Store, cfg *config.Config, sea *season.Season, log *slog.Logger) http.Handler {
+func New(st *store.Store, cfg *config.Config, sea *season.Season, m *metrics.Metrics, log *slog.Logger) http.Handler {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 	r.Use(gin.Recovery(), requestLogger(log))
+	if m != nil {
+		r.Use(m.Middleware())
+	}
 	if cfg.TrustProxy {
 		_ = r.SetTrustedProxies(nil) // trust all; we run behind the gateway
 	} else {
@@ -43,6 +48,7 @@ func New(st *store.Store, cfg *config.Config, sea *season.Season, log *slog.Logg
 		store:     st,
 		cfg:       cfg,
 		season:    sea,
+		metrics:   m,
 		log:       log,
 		geoClient: &http.Client{Timeout: 10 * time.Second},
 
@@ -63,6 +69,7 @@ func New(st *store.Store, cfg *config.Config, sea *season.Season, log *slog.Logg
 		api.GET("/season", h.getSeason)
 		api.GET("/doors", h.listDoors)
 		api.POST("/doors", h.createDoor)
+		api.PUT("/doors/:id", h.updateDoor)
 		api.DELETE("/doors/:id", h.deleteDoor)
 		api.GET("/geocode", h.geocode)
 		api.POST("/feedback", h.createFeedback)

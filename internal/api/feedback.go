@@ -87,6 +87,9 @@ func (h *handler) createFeedback(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
 		return
 	}
+	if h.metrics != nil {
+		h.metrics.FeedbackSubmitted()
+	}
 	c.Status(http.StatusNoContent)
 }
 

@@ -1,24 +1,27 @@
 import { useEffect, useRef, useState } from "react";
-import { api, type GeocodeResult, type NewDoor } from "../api";
+import { api, type Door, type GeocodeResult, type NewDoor } from "../api";
 import type { LatLng } from "../App";
 
 interface Props {
+  /** When set, the form edits this door instead of creating a new one. */
+  initial?: Door;
   draft: LatLng | null;
   onDraftChange: (p: LatLng) => void;
   onSubmit: (d: NewDoor) => Promise<void>;
   onCancel: () => void;
 }
 
-export default function AddDoorPanel({ draft, onDraftChange, onSubmit, onCancel }: Props) {
+export default function AddDoorPanel({ initial, draft, onDraftChange, onSubmit, onCancel }: Props) {
+  const editing = !!initial;
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<GeocodeResult[]>([]);
   const [searching, setSearching] = useState(false);
-  const [address, setAddress] = useState("");
-  const [unit, setUnit] = useState("");
-  const [intercom, setIntercom] = useState("");
-  const [note, setNote] = useState("");
-  const [openFrom, setOpenFrom] = useState("17:00");
-  const [openTo, setOpenTo] = useState("20:00");
+  const [address, setAddress] = useState(initial?.address ?? "");
+  const [unit, setUnit] = useState(initial?.unit ?? "");
+  const [intercom, setIntercom] = useState(initial?.intercom_name ?? "");
+  const [note, setNote] = useState(initial?.note ?? "");
+  const [openFrom, setOpenFrom] = useState(initial?.open_from ?? "17:00");
+  const [openTo, setOpenTo] = useState(initial?.open_to ?? "20:00");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const timer = useRef<number | undefined>(undefined);
@@ -75,7 +78,7 @@ export default function AddDoorPanel({ draft, onDraftChange, onSubmit, onCancel 
   return (
     <form className="add-panel" onSubmit={submit}>
       <div className="sheet-head">
-        <strong>Add my door</strong>
+        <strong>{editing ? "Edit my door" : "Add my door"}</strong>
         <button type="button" className="link" onClick={onCancel}>
           Cancel
         </button>
@@ -165,11 +168,13 @@ export default function AddDoorPanel({ draft, onDraftChange, onSubmit, onCancel 
       {error && <div className="error">{error}</div>}
 
       <button className="primary wide" type="submit" disabled={busy || !draft}>
-        {busy ? "Saving…" : "Put my door on the map"}
+        {busy ? "Saving…" : editing ? "Save changes" : "Put my door on the map"}
       </button>
-      <p className="muted small">
-        Only this browser can remove the door afterwards, so keep it around. Doors reset every year.
-      </p>
+      {!editing && (
+        <p className="muted small">
+          Only this browser can edit or remove the door afterwards, so keep it around. Doors reset every year.
+        </p>
+      )}
     </form>
   );
 }

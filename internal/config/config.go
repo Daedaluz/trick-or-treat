@@ -13,6 +13,7 @@ import (
 // Config holds everything the server needs to run.
 type Config struct {
 	Listen      string `mapstructure:"listen"`
+	MetricsAddr string `mapstructure:"metrics-listen"`
 	DatabaseURL string `mapstructure:"database-url"`
 	UserAgent   string `mapstructure:"user-agent"`
 	LogJSON     bool   `mapstructure:"log-json"`
@@ -35,6 +36,7 @@ type SeasonConfig struct {
 // Bind registers the config flags on fs and wires them into viper.
 func Bind(fs *pflag.FlagSet) {
 	fs.String("listen", ":8080", "address to listen on")
+	fs.String("metrics-listen", ":9090", "address for Prometheus /metrics (empty disables; keep it off the public route)")
 	fs.String("database-url", "postgres://trick:treat@localhost:5432/trick_or_treat?sslmode=disable", "PostgreSQL connection URL")
 	fs.String("user-agent", "trick-or-treat/0.1 (self-hosted; github.com/Daedaluz/trick-or-treat)", "User-Agent sent to the Nominatim geocoder")
 	fs.Bool("log-json", false, "emit structured JSON logs")

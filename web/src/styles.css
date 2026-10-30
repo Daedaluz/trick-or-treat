@@ -134,6 +134,8 @@ button { cursor: pointer; }
 .door-list li.visited .door { opacity: .55; }
 .door-list li.visited .addr { text-decoration: line-through; text-decoration-color: var(--muted); }
 .door-list .door { padding-left: 12px; }
+.door-list .own-actions { display: flex; flex-direction: column; align-items: flex-end; padding-right: 8px; }
+.door-list .own-actions .link { padding: 4px 8px; font-size: 13px; }
 .door-list .body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .door-list .addr { font-weight: 600; }
 .door-list .meta { display: flex; gap: 10px; color: var(--muted); font-size: 13px; flex-wrap: wrap; }

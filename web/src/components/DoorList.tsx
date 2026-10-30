@@ -9,11 +9,12 @@ interface Props {
   visited: Set<string>;
   selected: string | null;
   onFocus: (d: Door) => void;
+  onEdit: (d: Door) => void;
   onRemove: (id: string) => void;
   onToggleVisited: (id: string) => void;
 }
 
-export default function DoorList({ doors, total, me, myIds, visited, selected, onFocus, onRemove, onToggleVisited }: Props) {
+export default function DoorList({ doors, total, me, myIds, visited, selected, onFocus, onEdit, onRemove, onToggleVisited }: Props) {
   if (doors.length === 0) {
     return (
       <p className="muted empty">
@@ -51,9 +52,14 @@ export default function DoorList({ doors, total, me, myIds, visited, selected, o
               </span>
             </button>
             {mine && (
-              <button type="button" className="link danger" onClick={() => onRemove(d.id)}>
-                Remove
-              </button>
+              <span className="own-actions">
+                <button type="button" className="link" onClick={() => onEdit(d)}>
+                  Edit
+                </button>
+                <button type="button" className="link danger" onClick={() => onRemove(d.id)}>
+                  Remove
+                </button>
+              </span>
             )}
           </li>
         );
