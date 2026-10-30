@@ -1,8 +1,8 @@
 /**
  * Shake detection. Fires the "tot:shake" event on window when the device is
- * shaken. iOS needs an explicit permission request from a user gesture, so
- * callers wire `requestMotionPermission` to a tap; everywhere else listening
- * starts right away.
+ * shaken. iOS would need a permission dialog before motion events flow, and a
+ * system prompt is no way to deliver an easter egg, so there we never ask:
+ * iPhone users get the same effect by tapping the ghost three times.
  */
 
 export const SHAKE_EVENT = "tot:shake";
@@ -38,24 +38,6 @@ export function startShakeListener() {
   if (listening || typeof DeviceMotionEvent === "undefined") return;
   listening = true;
   window.addEventListener("devicemotion", onMotion, { passive: true });
-}
-
-/** Call from a click/touch handler. Resolves true when motion events are available. */
-export async function requestMotionPermission(): Promise<boolean> {
-  if (!motionNeedsPermission()) {
-    startShakeListener();
-    return true;
-  }
-  try {
-    const res = await (DeviceMotionEvent as unknown as Requestable).requestPermission!();
-    if (res === "granted") {
-      startShakeListener();
-      return true;
-    }
-  } catch {
-    /* user dismissed */
-  }
-  return false;
 }
 
 /** Fire a shake by hand (desktop easter egg, tests). */

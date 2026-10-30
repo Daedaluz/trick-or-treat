@@ -54,8 +54,7 @@ export default function Spider() {
       start("fall", current?.kind === "visit" ? current.x : undefined);
     };
     window.addEventListener(SHAKE_EVENT, onShake);
-    // Listen for motion right away where no permission prompt is needed;
-    // iOS wires the listener from a tap on the header ghost instead.
+    // Listen for motion only where it needs no permission prompt (not iOS).
     if (!motionNeedsPermission()) startShakeListener();
 
     return () => {

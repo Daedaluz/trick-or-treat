@@ -12,8 +12,8 @@ archive table and sign-up closes until next season. Only the browser that
 registered a door can remove it (a secret token is kept in `localStorage`), so
 there are no accounts.
 
-Easter eggs: now and then a spider drops in. Shake your phone (iPhones ask
-for motion access the first time you tap the ghost) or tap the ghost three
+Easter eggs: now and then a spider drops in. Shake your phone, or on an
+iPhone (where shaking would need a permission prompt) tap the ghost three
 times, and its thread snaps.
 
 ## Stack

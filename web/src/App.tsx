@@ -17,7 +17,7 @@ import DoorList from "./components/DoorList";
 import FeedbackPanel from "./components/FeedbackPanel";
 import OffSeasonPanel from "./components/OffSeasonPanel";
 import Spider from "./components/Spider";
-import { fakeShake, requestMotionPermission } from "./shake";
+import { fakeShake } from "./shake";
 
 export type LatLng = { lat: number; lng: number };
 type Mode = "browse" | "add" | "feedback";
@@ -45,11 +45,10 @@ export default function App() {
     }
   });
 
-  // Header ghost: a tap asks for motion permission where needed (iOS), and
-  // three quick taps shake the spider loose without a phone.
+  // Header ghost: three quick taps shake the spider loose. This is also the
+  // only trigger on iOS, where motion events would need a permission prompt.
   const ghostTaps = useRef<number[]>([]);
   function onGhostTap() {
-    void requestMotionPermission();
     const now = Date.now();
     ghostTaps.current = [...ghostTaps.current.filter((t) => now - t < 800), now];
     if (ghostTaps.current.length >= 3) {
