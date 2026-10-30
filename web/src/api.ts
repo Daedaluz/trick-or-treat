@@ -78,7 +78,17 @@ async function check<T>(res: Response): Promise<T> {
   return (await res.json()) as T;
 }
 
+export interface SeasonState {
+  year: number;
+  signup_open: boolean;
+  signup_opens_at: string;
+  archive_at: string;
+  reason?: string;
+}
+
 export const api = {
+  season: () => fetch("/api/season").then((r) => check<SeasonState>(r)),
+
   listDoors: () => fetch("/api/doors").then((r) => check<Door[]>(r)),
 
   createDoor: (d: NewDoor) =>

@@ -14,6 +14,7 @@ import (
 
 	"github.com/Daedaluz/trick-or-treat/internal/api"
 	"github.com/Daedaluz/trick-or-treat/internal/config"
+	"github.com/Daedaluz/trick-or-treat/internal/season"
 	"github.com/Daedaluz/trick-or-treat/internal/store"
 )
 
@@ -38,10 +39,15 @@ var serveCmd = &cobra.Command{
 		if err := st.Migrate(ctx); err != nil {
 			return err
 		}
+		sea, err := newSeason(cfg)
+		if err != nil {
+			return err
+		}
+		go sea.RunArchiver(ctx, st, cfg.Season.ArchiveInterval, log)
 
 		srv := &http.Server{
 			Addr:              cfg.Listen,
-			Handler:           api.New(st, cfg, log),
+			Handler:           api.New(st, cfg, sea, log),
 			ReadHeaderTimeout: 5 * time.Second,
 		}
 		go func() {
@@ -76,6 +82,39 @@ var migrateCmd = &cobra.Command{
 	},
 }
 
+var archiveCmd = &cobra.Command{
+	Use:   "archive",
+	Short: "Archive doors whose season is over, then exit",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		cfg, err := config.Load()
+		if err != nil {
+			return err
+		}
+		sea, err := newSeason(cfg)
+		if err != nil {
+			return err
+		}
+		st, err := store.Open(cmd.Context(), cfg.DatabaseURL)
+		if err != nil {
+			return err
+		}
+		defer st.Close()
+		if err := st.Migrate(cmd.Context()); err != nil {
+			return err
+		}
+		moved, err := sea.ArchiveDue(cmd.Context(), st, time.Now(), newLogger(cfg))
+		if err != nil {
+			return err
+		}
+		cmd.Printf("archived %d doors\n", moved)
+		return nil
+	},
+}
+
+func newSeason(cfg *config.Config) (*season.Season, error) {
+	return season.New(cfg.Season.SignupOpens, cfg.Season.ArchiveAfter, cfg.Season.Timezone)
+}
+
 func newLogger(cfg *config.Config) *slog.Logger {
 	if cfg.LogJSON {
 		return slog.New(slog.NewJSONHandler(os.Stdout, nil))
@@ -84,5 +123,5 @@ func newLogger(cfg *config.Config) *slog.Logger {
 }
 
 func init() {
-	rootCmd.AddCommand(serveCmd, migrateCmd)
+	rootCmd.AddCommand(serveCmd, migrateCmd, archiveCmd)
 }

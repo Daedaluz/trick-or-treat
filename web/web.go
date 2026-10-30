@@ -29,8 +29,14 @@ func Handler() http.Handler {
 		}
 		if f, err := sub.Open(p); err == nil {
 			f.Close()
-			if p != "index.html" && strings.HasPrefix(p, "assets/") {
+			switch {
+			case strings.HasPrefix(p, "assets/"):
 				w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+			case p == "sw.js" || p == "manifest.webmanifest" || p == "index.html":
+				w.Header().Set("Cache-Control", "no-cache")
+			}
+			if p == "manifest.webmanifest" {
+				w.Header().Set("Content-Type", "application/manifest+json")
 			}
 			fileServer.ServeHTTP(w, r)
 			return

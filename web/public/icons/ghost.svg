@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#d9ccf5"/>
+    </linearGradient>
+  </defs>
+  <!-- body -->
+  <path fill="url(#g)" d="M64 10c-26 0-44 20-44 46v56c0 4 5 6 8 3l8-8 8 8c2 2 6 2 8 0l8-8 8 8c2 2 6 2 8 0l8-8 8 8c3 3 8 1 8-3V56c0-26-18-46-44-46z"/>
+  <!-- eyes -->
+  <ellipse cx="48" cy="56" rx="8" ry="11" fill="#1a0f2e"/>
+  <ellipse cx="80" cy="56" rx="8" ry="11" fill="#1a0f2e"/>
+  <circle cx="51" cy="52" r="3" fill="#fff"/>
+  <circle cx="83" cy="52" r="3" fill="#fff"/>
+  <!-- mouth -->
+  <ellipse cx="64" cy="80" rx="7" ry="9" fill="#1a0f2e"/>
+  <!-- cheeks -->
+  <circle cx="36" cy="72" r="5" fill="#f28c28" opacity=".7"/>
+  <circle cx="92" cy="72" r="5" fill="#f28c28" opacity=".7"/>
+</svg>

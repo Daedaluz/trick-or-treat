@@ -6,8 +6,11 @@ Households mark their address as open (with hours and an optional note).
 Kids and parents open the map, see where they are, and head for the pumpkins
 instead of knocking on doors that would rather be left alone.
 
-Doors reset every year. Only the browser that registered a door can remove it
-(a secret token is kept in `localStorage`), so there are no accounts.
+Each year is a season: sign-up opens on a configurable date (default 1 October),
+and on the archive date (default 2 November) the year's doors are moved to an
+archive table and sign-up closes until next season. Only the browser that
+registered a door can remove it (a secret token is kept in `localStorage`), so
+there are no accounts.
 
 ## Stack
 
@@ -37,15 +40,31 @@ Every flag can be set as an env var with the `TOT_` prefix, or in a file passed 
 | `--user-agent`   | `TOT_USER_AGENT`    | `trick-or-treat/0.1 (…)`                  |
 | `--log-json`     | `TOT_LOG_JSON`      | `false`                                   |
 | `--trust-proxy`  | `TOT_TRUST_PROXY`   | `true`                                    |
+| `--season.signup-opens`     | `TOT_SEASON_SIGNUP_OPENS`     | `10-01` (MM-DD)   |
+| `--season.archive-after`    | `TOT_SEASON_ARCHIVE_AFTER`    | `11-02` (MM-DD)   |
+| `--season.timezone`         | `TOT_SEASON_TIMEZONE`         | `Europe/Stockholm` |
+| `--season.archive-interval` | `TOT_SEASON_ARCHIVE_INTERVAL` | `1h`              |
 
-Commands: `serve` (migrate + serve), `migrate` (migrate and exit).
+Commands: `serve` (migrate, run the hourly archive job and serve), `migrate`
+(migrate and exit), `archive` (archive due seasons and exit, handy as a CronJob).
+
+Example config file (`--config config.yaml`):
+
+```yaml
+database-url: postgres://trick:treat@db/trick_or_treat
+season:
+  signup-opens: "10-01"
+  archive-after: "11-02"
+  timezone: Europe/Stockholm
+```
 
 ## API
 
 | Method   | Path              | Description                                              |
 |----------|-------------------|----------------------------------------------------------|
+| `GET`    | `/api/season`     | Current year, whether sign-up is open, and the dates     |
 | `GET`    | `/api/doors`      | Doors registered for the current year                    |
-| `POST`   | `/api/doors`      | Register a door; returns the door and a one-time token   |
+| `POST`   | `/api/doors`      | Register a door; `403` while sign-up is closed           |
 | `DELETE` | `/api/doors/{id}` | Remove a door; needs the `X-Door-Token` header           |
 | `GET`    | `/api/geocode?q=` | Address search (Nominatim proxy)                         |
 | `GET`    | `/healthz`, `/readyz` | Probes                                               |

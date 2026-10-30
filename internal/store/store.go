@@ -148,6 +148,39 @@ func (s *Store) DeleteDoor(ctx context.Context, id, tokenHash string) error {
 	return nil
 }
 
+// ArchiveYears moves every door whose year is in years into doors_archive.
+// It returns how many doors were moved.
+func (s *Store) ArchiveYears(ctx context.Context, years []int) (int64, error) {
+	if len(years) == 0 {
+		return 0, nil
+	}
+	var moved int64
+	err := pgx.BeginFunc(ctx, s.pool, func(tx pgx.Tx) error {
+		tag, err := tx.Exec(ctx, `
+			WITH moved AS (
+				DELETE FROM doors WHERE year = ANY($1) RETURNING *
+			)
+			INSERT INTO doors_archive (id, lat, lng, address, unit, intercom_name, note, open_from, open_to, year, created_at)
+			SELECT id, lat, lng, address, unit, intercom_name, note, open_from, open_to, year, created_at FROM moved
+			ON CONFLICT (id) DO NOTHING`, years)
+		if err != nil {
+			return err
+		}
+		moved = tag.RowsAffected()
+		return nil
+	})
+	return moved, err
+}
+
+// LiveYears returns the distinct years present in the live doors table.
+func (s *Store) LiveYears(ctx context.Context) ([]int, error) {
+	rows, err := s.pool.Query(ctx, `SELECT DISTINCT year FROM doors ORDER BY year`)
+	if err != nil {
+		return nil, err
+	}
+	return pgx.CollectRows(rows, pgx.RowTo[int])
+}
+
 // Healthy reports whether the database answers.
 func (s *Store) Healthy(ctx context.Context) error {
 	return s.pool.Ping(ctx)

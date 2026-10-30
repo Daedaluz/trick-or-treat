@@ -14,11 +14,14 @@ import (
 	"github.com/Daedaluz/trick-or-treat/internal/store"
 )
 
-func currentYear() int { return time.Now().Year() }
+// getSeason tells the client whether sign-up is open and the relevant dates.
+func (h *handler) getSeason(c *gin.Context) {
+	c.JSON(http.StatusOK, h.season.State(time.Now()))
+}
 
 // listDoors returns every door registered for the current year.
 func (h *handler) listDoors(c *gin.Context) {
-	doors, err := h.store.ListDoors(c.Request.Context(), currentYear())
+	doors, err := h.store.ListDoors(c.Request.Context(), h.season.Year(time.Now()))
 	if err != nil {
 		h.log.Error("list doors", "err", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
@@ -41,6 +44,12 @@ type createDoorRequest struct {
 // createDoor registers a door and returns a one-time secret token the owner
 // can use to remove it later.
 func (h *handler) createDoor(c *gin.Context) {
+	now := time.Now()
+	if st := h.season.State(now); !st.SignupOpen {
+		c.JSON(http.StatusForbidden, gin.H{"error": st.Reason, "season": st})
+		return
+	}
+
 	var req createDoorRequest
 	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 1<<16)
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -78,8 +87,8 @@ func (h *handler) createDoor(c *gin.Context) {
 		Note:      req.Note,
 		OpenFrom:  req.OpenFrom,
 		OpenTo:    req.OpenTo,
-		Year:      currentYear(),
-		CreatedAt: time.Now().UTC(),
+		Year:      h.season.Year(now),
+		CreatedAt: now.UTC(),
 	}
 	if err := h.store.CreateDoor(c.Request.Context(), d, hashToken(token)); err != nil {
 		h.log.Error("create door", "err", err)

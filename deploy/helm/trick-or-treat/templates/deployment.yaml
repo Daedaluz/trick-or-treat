@@ -47,6 +47,14 @@ spec:
               value: {{ .Values.config.trustProxy | quote }}
             - name: TOT_USER_AGENT
               value: {{ .Values.config.userAgent | quote }}
+            - name: TOT_SEASON_SIGNUP_OPENS
+              value: {{ .Values.config.season.signupOpens | quote }}
+            - name: TOT_SEASON_ARCHIVE_AFTER
+              value: {{ .Values.config.season.archiveAfter | quote }}
+            - name: TOT_SEASON_TIMEZONE
+              value: {{ .Values.config.season.timezone | quote }}
+            - name: TOT_SEASON_ARCHIVE_INTERVAL
+              value: {{ .Values.config.season.archiveInterval | quote }}
             - name: TOT_DATABASE_URL
               valueFrom:
                 secretKeyRef:

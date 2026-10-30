@@ -24,6 +24,15 @@ config:
   userAgent: "trick-or-treat/0.1 (https://github.com/Daedaluz/trick-or-treat)"
   logJSON: true
   trustProxy: true
+  season:
+    # MM-DD from which households can register a door.
+    signupOpens: "10-01"
+    # MM-DD on which the year's doors are moved to the archive and sign-up closes.
+    archiveAfter: "11-02"
+    # IANA timezone the dates above are evaluated in.
+    timezone: "Europe/Stockholm"
+    # How often each replica checks whether archiving is due.
+    archiveInterval: "1h"
 
 service:
   type: ClusterIP

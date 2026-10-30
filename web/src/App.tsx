@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { api, distanceM, loadMyDoors, saveMyDoors, type Door, type MyDoor, type NewDoor } from "./api";
+import { api, distanceM, loadMyDoors, saveMyDoors, type Door, type MyDoor, type NewDoor, type SeasonState } from "./api";
 import MapView, { type Basemap } from "./components/MapView";
 import AddDoorPanel from "./components/AddDoorPanel";
 import DoorList from "./components/DoorList";
@@ -9,6 +9,7 @@ type Mode = "browse" | "add";
 
 export default function App() {
   const [doors, setDoors] = useState<Door[]>([]);
+  const [season, setSeason] = useState<SeasonState | null>(null);
   const [myDoors, setMyDoors] = useState<MyDoor[]>(() => loadMyDoors());
   const [me, setMe] = useState<LatLng | null>(null);
   const [locating, setLocating] = useState(false);
@@ -38,7 +39,9 @@ export default function App() {
 
   const refresh = useCallback(async () => {
     try {
-      setDoors(await api.listDoors());
+      const [d, s] = await Promise.all([api.listDoors(), api.season()]);
+      setDoors(d);
+      setSeason(s);
       setError(null);
     } catch (e) {
       setError(`Could not load doors: ${(e as Error).message}`);
@@ -142,7 +145,7 @@ export default function App() {
 
       <header className="topbar">
         <h1>
-          <img src="/pumpkin.svg" alt="" width="28" height="28" /> Trick or Treat
+          <img src="/icons/ghost.svg" alt="" width="28" height="28" /> Trick or Treat
         </h1>
         <div className="topbar-actions">
           <button
@@ -184,13 +187,17 @@ export default function App() {
           <>
             <div className="sheet-head">
               <div>
-                <strong>{doors.length}</strong> {doors.length === 1 ? "door" : "doors"} open this year
+                <strong>{doors.length}</strong> {doors.length === 1 ? "door" : "doors"} open{" "}
+                {season ? `in ${season.year}` : "this year"}
                 {!me && <div className="muted">Tap ◎ to sort by distance</div>}
               </div>
-              <button className="primary" onClick={startAdd}>
-                + Add my door
-              </button>
+              {season?.signup_open !== false && (
+                <button className="primary" onClick={startAdd}>
+                  + Add my door
+                </button>
+              )}
             </div>
+            {season && !season.signup_open && <p className="closed">{season.reason}</p>}
             <DoorList
               doors={sorted}
               me={me}
