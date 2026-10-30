@@ -76,7 +76,8 @@
           "color": {
             "mode": "fixed",
             "fixedColor": "orange"
-          }
+          },
+          "decimals": 0
         },
         "overrides": []
       },
@@ -124,7 +125,8 @@
           "color": {
             "mode": "fixed",
             "fixedColor": "orange"
-          }
+          },
+          "decimals": 0
         },
         "overrides": []
       },
@@ -172,7 +174,8 @@
           "color": {
             "mode": "fixed",
             "fixedColor": "orange"
-          }
+          },
+          "decimals": 0
         },
         "overrides": []
       },
@@ -220,7 +223,8 @@
           "color": {
             "mode": "fixed",
             "fixedColor": "orange"
-          }
+          },
+          "decimals": 0
         },
         "overrides": []
       },
