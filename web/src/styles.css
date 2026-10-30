@@ -99,7 +99,7 @@ button { cursor: pointer; }
   padding: 10px 14px; border-radius: 10px; font-weight: 600; white-space: nowrap;
 }
 .primary:disabled { opacity: .5; cursor: default; }
-.primary.wide { width: 100%; padding: 14px; font-size: 16px; }
+.primary.wide { display: block; padding: 14px; font-size: 16px; }
 .link { background: none; border: none; color: var(--accent); padding: 6px 8px; }
 .link.danger { color: var(--danger); }
 .muted { color: var(--muted); }
@@ -132,21 +132,27 @@ button { cursor: pointer; }
 .tag { background: var(--accent); color: var(--accent-ink); border-radius: 6px; padding: 0 6px; font-weight: 600; }
 
 /* Add form */
-.add-panel { display: flex; flex-direction: column; gap: 12px; padding-bottom: calc(env(safe-area-inset-bottom) + 16px); overflow-y: auto; }
+.add-panel { display: flex; flex-direction: column; gap: 12px; padding-bottom: calc(env(safe-area-inset-bottom) + 16px); overflow-y: auto; overflow-x: hidden; }
+.add-panel > * { flex-shrink: 0; } /* never squash a field or the results to fit the sheet */
 .add-panel > *:not(.sheet-head) { margin: 0 16px; }
 .add-panel label { display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--muted); }
 .add-panel input, .add-panel textarea {
   background: var(--bg); border: 1px solid rgba(255,255,255,.12); border-radius: 10px;
-  padding: 12px; font-size: 16px; color: var(--text); width: 100%;
+  padding: 12px; font-size: 16px; color: var(--text); width: 100%; min-width: 0;
 }
+.add-panel input::placeholder, .add-panel textarea::placeholder { color: var(--muted); opacity: .7; }
+.add-panel .hint { font-size: 12px; color: var(--muted); margin-top: -2px; }
 .add-panel input:focus, .add-panel textarea:focus { outline: 2px solid var(--accent); border-color: transparent; }
 .add-panel .row { display: flex; gap: 12px; }
 .add-panel .row label { flex: 1; }
 .results { list-style: none; margin: 0 16px; padding: 0; background: var(--bg); border-radius: 10px; overflow: hidden; }
 .results button {
   width: 100%; text-align: left; background: none; border: none; padding: 10px 12px;
-  border-bottom: 1px solid rgba(255,255,255,.08); font-size: 14px;
+  border-bottom: 1px solid rgba(255,255,255,.08); font-size: 14px; line-height: 1.35;
+  overflow-wrap: anywhere;
 }
+.results button .main { display: block; font-weight: 600; color: var(--text); }
+.results button .rest { display: block; color: var(--muted); font-size: 13px; }
 .results button:hover { background: var(--panel-2); }
 .add-panel p { margin: 0 16px; }
 

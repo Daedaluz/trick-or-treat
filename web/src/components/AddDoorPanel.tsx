@@ -98,7 +98,8 @@ export default function AddDoorPanel({ draft, onDraftChange, onSubmit, onCancel 
           {results.map((r, i) => (
             <li key={i}>
               <button type="button" onClick={() => pick(r)}>
-                {r.display_name}
+                <span className="main">{shortName(r.display_name)}</span>
+                <span className="rest">{r.display_name}</span>
               </button>
             </li>
           ))}
@@ -114,6 +115,7 @@ export default function AddDoorPanel({ draft, onDraftChange, onSubmit, onCancel 
       <label>
         Address shown to visitors
         <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Pumpkin Lane 13" maxLength={300} required />
+        <span className="hint">What is written on the door or the sign.</span>
       </label>
 
       <label>
@@ -121,9 +123,10 @@ export default function AddDoorPanel({ draft, onDraftChange, onSubmit, onCancel 
         <input
           value={unit}
           onChange={(e) => setUnit(e.target.value)}
-          placeholder="Apt 1203, 3rd floor — for buildings with several households"
+          placeholder="Apt 1203, 3rd floor"
           maxLength={100}
         />
+        <span className="hint">For buildings with several households.</span>
       </label>
 
       <label>
@@ -131,9 +134,10 @@ export default function AddDoorPanel({ draft, onDraftChange, onSubmit, onCancel 
         <input
           value={intercom}
           onChange={(e) => setIntercom(e.target.value)}
-          placeholder="Andersson — so visitors know who to buzz"
+          placeholder="Andersson"
           maxLength={100}
         />
+        <span className="hint">So visitors know who to buzz to get in.</span>
       </label>
 
       <div className="row">
@@ -152,7 +156,7 @@ export default function AddDoorPanel({ draft, onDraftChange, onSubmit, onCancel 
         <textarea
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          placeholder="Ring the bell, allergy-friendly candy, dog is friendly…"
+          placeholder="Ring the bell, allergy-friendly candy…"
           maxLength={500}
           rows={2}
         />
@@ -171,13 +175,18 @@ export default function AddDoorPanel({ draft, onDraftChange, onSubmit, onCancel 
 }
 
 /**
- * Nominatim returns very long names like "10, Kungsgatan, Norrmalm, …".
- * Keep the first few components and put a leading house number after the street.
+ * Nominatim returns long names like "10, Kungsgatan, Norrmalm, …" or
+ * "Kallhällsparken Hus 4, 7, Ulvsättragränd, Lilla Ulvsättra, …".
+ * Find the house number, join it with the street that follows it, and lead
+ * with that; keep a couple of the remaining parts for context.
  */
 function shortName(s: string): string {
   const parts = s.split(",").map((x) => x.trim()).filter(Boolean);
-  if (parts.length > 1 && /^\d+[a-zA-Z]?$/.test(parts[0])) {
-    parts.splice(0, 2, `${parts[1]} ${parts[0]}`);
+  const i = parts.findIndex((p, idx) => idx + 1 < parts.length && /^\d+[a-zA-Z]?(-\d+[a-zA-Z]?)?$/.test(p));
+  if (i >= 0) {
+    const street = `${parts[i + 1]} ${parts[i]}`;
+    const rest = parts.filter((_, idx) => idx !== i && idx !== i + 1);
+    return [street, ...rest.slice(0, 2)].join(", ");
   }
   return parts.slice(0, 3).join(", ");
 }
