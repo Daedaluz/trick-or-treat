@@ -1,0 +1,14 @@
+# Go
+/bin/
+/trick-or-treat
+*.test
+
+# Frontend
+web/node_modules/
+web/dist/*
+!web/dist/.gitkeep
+
+# Local
+*.db
+.env
+/config.yaml

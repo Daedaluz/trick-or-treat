@@ -1,0 +1,88 @@
+package cmd
+
+import (
+	"context"
+	"errors"
+	"log/slog"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"github.com/spf13/cobra"
+
+	"github.com/Daedaluz/trick-or-treat/internal/api"
+	"github.com/Daedaluz/trick-or-treat/internal/config"
+	"github.com/Daedaluz/trick-or-treat/internal/store"
+)
+
+var serveCmd = &cobra.Command{
+	Use:   "serve",
+	Short: "Run database migrations and start the HTTP server",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		cfg, err := config.Load()
+		if err != nil {
+			return err
+		}
+		log := newLogger(cfg)
+
+		ctx, stop := signal.NotifyContext(cmd.Context(), os.Interrupt, syscall.SIGTERM)
+		defer stop()
+
+		st, err := store.Open(ctx, cfg.DatabaseURL)
+		if err != nil {
+			return err
+		}
+		defer st.Close()
+		if err := st.Migrate(ctx); err != nil {
+			return err
+		}
+
+		srv := &http.Server{
+			Addr:              cfg.Listen,
+			Handler:           api.New(st, cfg, log),
+			ReadHeaderTimeout: 5 * time.Second,
+		}
+		go func() {
+			<-ctx.Done()
+			shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+			_ = srv.Shutdown(shutdownCtx)
+		}()
+
+		log.Info("listening", "addr", cfg.Listen)
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			return err
+		}
+		return nil
+	},
+}
+
+var migrateCmd = &cobra.Command{
+	Use:   "migrate",
+	Short: "Run database migrations and exit",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		cfg, err := config.Load()
+		if err != nil {
+			return err
+		}
+		st, err := store.Open(cmd.Context(), cfg.DatabaseURL)
+		if err != nil {
+			return err
+		}
+		defer st.Close()
+		return st.Migrate(cmd.Context())
+	},
+}
+
+func newLogger(cfg *config.Config) *slog.Logger {
+	if cfg.LogJSON {
+		return slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	}
+	return slog.New(slog.NewTextHandler(os.Stdout, nil))
+}
+
+func init() {
+	rootCmd.AddCommand(serveCmd, migrateCmd)
+}

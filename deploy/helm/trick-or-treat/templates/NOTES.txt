@@ -1,0 +1,13 @@
+trick-or-treat is deploying.
+
+{{- if .Values.httpRoute.enabled }}
+It will be reachable through the Gateway at:
+{{- range .Values.httpRoute.hostnames }}
+  https://{{ . }}/
+{{- end }}
+{{- else }}
+No HTTPRoute was created. Port-forward to try it:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "trick-or-treat.fullname" . }} 8080:{{ .Values.service.port }}
+{{- end }}
+
+Migrations run automatically when a pod starts.

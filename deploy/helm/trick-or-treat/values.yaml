@@ -1,0 +1,80 @@
+replicaCount: 2
+
+image:
+  repository: ghcr.io/daedaluz/trick-or-treat
+  tag: ""          # defaults to the chart appVersion
+  pullPolicy: IfNotPresent
+
+# The GitHub repo is private, so the image in ghcr.io is too.
+imagePullSecrets: []
+#  - name: ghcr-pull
+
+nameOverride: ""
+fullnameOverride: ""
+
+database:
+  # Either give the URL directly (it will be stored in a chart-managed Secret)…
+  url: ""
+  # …or point at an existing Secret, e.g. one created by CloudNativePG or Zalando's operator.
+  existingSecret: ""
+  existingSecretKey: "uri"
+
+config:
+  # Sent to Nominatim; the usage policy asks for a way to contact the operator.
+  userAgent: "trick-or-treat/0.1 (https://github.com/Daedaluz/trick-or-treat)"
+  logJSON: true
+  trustProxy: true
+
+service:
+  type: ClusterIP
+  port: 80
+
+# Gateway API HTTPRoute. Requires a Gateway in the cluster.
+httpRoute:
+  enabled: true
+  annotations: {}
+  parentRefs:
+    - name: gateway
+      namespace: gateway-system
+      # sectionName: https
+  hostnames:
+    - trick-or-treat.example.com
+
+resources:
+  requests:
+    cpu: 20m
+    memory: 32Mi
+  limits:
+    memory: 128Mi
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+topologySpreadConstraints: []
