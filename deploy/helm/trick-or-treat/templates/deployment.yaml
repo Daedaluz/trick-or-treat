@@ -49,6 +49,8 @@ spec:
               value: {{ .Values.config.userAgent | quote }}
             - name: TOT_SEASON_SIGNUP_OPENS
               value: {{ .Values.config.season.signupOpens | quote }}
+            - name: TOT_SEASON_EVENT_DATE
+              value: {{ .Values.config.season.eventDate | quote }}
             - name: TOT_SEASON_ARCHIVE_AFTER
               value: {{ .Values.config.season.archiveAfter | quote }}
             - name: TOT_SEASON_TIMEZONE

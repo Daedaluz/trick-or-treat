@@ -1,9 +1,22 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { api, distanceM, loadMyDoors, saveMyDoors, type Door, type MyDoor, type NewDoor, type SeasonState } from "./api";
+import {
+  api,
+  distanceM,
+  loadMyDoors,
+  loadVisited,
+  saveMyDoors,
+  saveVisited,
+  type Door,
+  type MyDoor,
+  type NewDoor,
+  type SeasonState,
+} from "./api";
 import MapView, { type Basemap } from "./components/MapView";
 import AddDoorPanel from "./components/AddDoorPanel";
 import DoorList from "./components/DoorList";
 import FeedbackPanel from "./components/FeedbackPanel";
+import OffSeasonPanel from "./components/OffSeasonPanel";
+import Spider from "./components/Spider";
 
 export type LatLng = { lat: number; lng: number };
 type Mode = "browse" | "add" | "feedback";
@@ -11,6 +24,7 @@ type Mode = "browse" | "add" | "feedback";
 export default function App() {
   const [doors, setDoors] = useState<Door[]>([]);
   const [season, setSeason] = useState<SeasonState | null>(null);
+  const [visited, setVisited] = useState<Set<string>>(() => loadVisited(new Date().getFullYear()));
   const [myDoors, setMyDoors] = useState<MyDoor[]>(() => loadMyDoors());
   const [me, setMe] = useState<LatLng | null>(null);
   const [locating, setLocating] = useState(false);
@@ -88,6 +102,22 @@ export default function App() {
 
   const myIds = useMemo(() => new Set(myDoors.map((d) => d.id)), [myDoors]);
 
+  // Visited marks belong to a season; reload them if the server's year differs.
+  useEffect(() => {
+    if (season) setVisited(loadVisited(season.year));
+  }, [season?.year]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function toggleVisited(id: string) {
+    const year = season?.year ?? new Date().getFullYear();
+    const next = new Set(visited);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setVisited(next);
+    saveVisited(year, next);
+  }
+
+  const visitedCount = useMemo(() => doors.filter((d) => visited.has(d.id)).length, [doors, visited]);
+
   async function submitDoor(d: NewDoor) {
     const res = await api.createDoor(d);
     const next = [...myDoors, { id: res.door.id, token: res.token }];
@@ -137,12 +167,15 @@ export default function App() {
         doors={doors}
         me={me}
         myIds={myIds}
+        visited={visited}
         selected={selected}
         onSelect={setSelected}
         draft={mode === "add" ? draft : null}
         onDraftMove={mode === "add" ? setDraft : undefined}
         flyTo={flyTo}
       />
+
+      <Spider />
 
       <header className="topbar">
         <h1>
@@ -173,6 +206,15 @@ export default function App() {
         <button className="sheet-handle" onClick={() => setSheetOpen((o) => !o)} aria-label="Toggle panel" />
         {mode === "feedback" ? (
           <FeedbackPanel onClose={() => setMode("browse")} />
+        ) : season && season.phase !== "open" ? (
+          <>
+            <OffSeasonPanel season={season} />
+            <footer className="sheet-foot">
+              <button type="button" className="link" onClick={() => setMode("feedback")}>
+                💬 Leave feedback
+              </button>
+            </footer>
+          </>
         ) : mode === "add" ? (
           <AddDoorPanel
             draft={draft}
@@ -192,7 +234,9 @@ export default function App() {
               <div>
                 <strong>{doors.length}</strong> {doors.length === 1 ? "door" : "doors"} open{" "}
                 {season ? `in ${season.year}` : "this year"}
-                {!me && <div className="muted">Tap ◎ to sort by distance</div>}
+                <div className="muted">
+                  {visitedCount > 0 ? `${visitedCount} visited` : me ? "Tap a door to see it on the map" : "Tap ◎ to sort by distance"}
+                </div>
               </div>
               {season?.signup_open !== false && (
                 <button className="primary" onClick={startAdd}>
@@ -205,9 +249,11 @@ export default function App() {
               doors={sorted}
               me={me}
               myIds={myIds}
+              visited={visited}
               selected={selected}
               onFocus={focusDoor}
               onRemove={removeDoor}
+              onToggleVisited={toggleVisited}
             />
             <footer className="sheet-foot">
               <button

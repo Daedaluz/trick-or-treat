@@ -181,6 +181,13 @@ func (s *Store) LiveYears(ctx context.Context) ([]int, error) {
 	return pgx.CollectRows(rows, pgx.RowTo[int])
 }
 
+// CountArchived returns how many doors were archived for the given year.
+func (s *Store) CountArchived(ctx context.Context, year int) (int, error) {
+	var n int
+	err := s.pool.QueryRow(ctx, `SELECT count(*) FROM doors_archive WHERE year = $1`, year).Scan(&n)
+	return n, err
+}
+
 // Healthy reports whether the database answers.
 func (s *Store) Healthy(ctx context.Context) error {
 	return s.pool.Ping(ctx)

@@ -42,6 +42,7 @@ Every flag can be set as an env var with the `TOT_` prefix, or in a file passed 
 | `--trust-proxy`  | `TOT_TRUST_PROXY`   | `true`                                    |
 | `--admin-token`  | `TOT_ADMIN_TOKEN`   | empty (admin endpoints disabled)          |
 | `--season.signup-opens`     | `TOT_SEASON_SIGNUP_OPENS`     | `10-01` (MM-DD)   |
+| `--season.event-date`       | `TOT_SEASON_EVENT_DATE`       | `10-31` (MM-DD)   |
 | `--season.archive-after`    | `TOT_SEASON_ARCHIVE_AFTER`    | `11-02` (MM-DD)   |
 | `--season.timezone`         | `TOT_SEASON_TIMEZONE`         | `Europe/Stockholm` |
 | `--season.archive-interval` | `TOT_SEASON_ARCHIVE_INTERVAL` | `1h`              |
@@ -56,6 +57,7 @@ Example config file (`--config config.yaml`):
 database-url: postgres://trick:treat@db/trick_or_treat
 season:
   signup-opens: "10-01"
+  event-date: "10-31"
   archive-after: "11-02"
   timezone: Europe/Stockholm
 ```
@@ -64,7 +66,7 @@ season:
 
 | Method   | Path              | Description                                              |
 |----------|-------------------|----------------------------------------------------------|
-| `GET`    | `/api/season`     | Current year, whether sign-up is open, and the dates     |
+| `GET`    | `/api/season`     | Phase (`before`/`open`/`after`), dates, last season's door count |
 | `GET`    | `/api/doors`      | Doors registered for the current year                    |
 | `POST`   | `/api/doors`      | Register a door; `403` while sign-up is closed           |
 | `DELETE` | `/api/doors/{id}` | Remove a door; needs the `X-Door-Token` header           |

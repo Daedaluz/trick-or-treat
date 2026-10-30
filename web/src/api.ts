@@ -80,10 +80,13 @@ async function check<T>(res: Response): Promise<T> {
 
 export interface SeasonState {
   year: number;
+  phase: "before" | "open" | "after";
   signup_open: boolean;
   signup_opens_at: string;
+  event_at: string;
   archive_at: string;
   reason?: string;
+  last_season?: { year: number; doors: number };
 }
 
 export const api = {
@@ -136,6 +139,25 @@ export function saveMyDoors(doors: MyDoor[]) {
     localStorage.setItem(KEY, JSON.stringify(doors));
   } catch {
     /* private mode etc. */
+  }
+}
+
+/** Doors this browser has already knocked on, per season year. */
+const VISITED_KEY = (year: number) => `trick-or-treat:visited:${year}`;
+
+export function loadVisited(year: number): Set<string> {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(VISITED_KEY(year)) ?? "[]") as string[]);
+  } catch {
+    return new Set();
+  }
+}
+
+export function saveVisited(year: number, ids: Set<string>) {
+  try {
+    localStorage.setItem(VISITED_KEY(year), JSON.stringify([...ids]));
+  } catch {
+    /* ignore */
   }
 }
 

@@ -34,6 +34,8 @@ config:
   season:
     # MM-DD from which households can register a door.
     signupOpens: "10-01"
+    # MM-DD of the event itself; the off-season view counts down to it.
+    eventDate: "10-31"
     # MM-DD on which the year's doors are moved to the archive and sign-up closes.
     archiveAfter: "11-02"
     # IANA timezone the dates above are evaluated in.

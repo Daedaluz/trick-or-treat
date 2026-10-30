@@ -26,6 +26,7 @@ type Config struct {
 // Dates are "MM-DD" and are evaluated in Timezone.
 type SeasonConfig struct {
 	SignupOpens     string        `mapstructure:"signup-opens"`
+	EventDate       string        `mapstructure:"event-date"`
 	ArchiveAfter    string        `mapstructure:"archive-after"`
 	Timezone        string        `mapstructure:"timezone"`
 	ArchiveInterval time.Duration `mapstructure:"archive-interval"`
@@ -40,6 +41,7 @@ func Bind(fs *pflag.FlagSet) {
 	fs.Bool("trust-proxy", true, "trust X-Forwarded-For from the ingress/gateway")
 	fs.String("admin-token", "", "bearer token for the operator-only /api/admin endpoints (empty disables them)")
 	fs.String("season.signup-opens", "10-01", "MM-DD from which households can register a door")
+	fs.String("season.event-date", "10-31", "MM-DD of the event itself, used for the countdown")
 	fs.String("season.archive-after", "11-02", "MM-DD on which the year's doors are archived and sign-up closes")
 	fs.String("season.timezone", "Europe/Stockholm", "IANA timezone the season dates are evaluated in")
 	fs.Duration("season.archive-interval", time.Hour, "how often the server checks whether to archive")

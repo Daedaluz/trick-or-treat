@@ -11,12 +11,21 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/Daedaluz/trick-or-treat/internal/season"
 	"github.com/Daedaluz/trick-or-treat/internal/store"
 )
 
 // getSeason tells the client whether sign-up is open and the relevant dates.
 func (h *handler) getSeason(c *gin.Context) {
-	c.JSON(http.StatusOK, h.season.State(time.Now()))
+	now := time.Now()
+	st := h.season.State(now)
+	last := h.season.LastSeasonYear(now)
+	if n, err := h.store.CountArchived(c.Request.Context(), last); err == nil && n > 0 {
+		st.LastSeason = &season.LastSeason{Year: last, Doors: n}
+	} else if err != nil {
+		h.log.Error("count archived", "err", err)
+	}
+	c.JSON(http.StatusOK, st)
 }
 
 // listDoors returns every door registered for the current year.

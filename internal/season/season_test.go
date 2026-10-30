@@ -7,7 +7,7 @@ import (
 
 func mustNew(t *testing.T) *Season {
 	t.Helper()
-	s, err := New("10-01", "11-02", "Europe/Stockholm")
+	s, err := New("10-01", "10-31", "11-02", "Europe/Stockholm")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -46,10 +46,22 @@ func TestState(t *testing.T) {
 			t.Errorf("at %s: year = %d", c.now, st.Year)
 		}
 	}
-	// After archiving, the next sign-up date is next year's.
+	// After archiving, the next dates are next year's.
 	st := s.State(at(t, "2026-11-02 00:00"))
-	if st.SignupOpensAt.Year() != 2027 {
-		t.Errorf("next signup year = %d, want 2027", st.SignupOpensAt.Year())
+	if st.Phase != PhaseAfter || st.SignupOpensAt.Year() != 2027 || st.EventAt.Year() != 2027 {
+		t.Errorf("after archive: phase=%s signup=%v event=%v", st.Phase, st.SignupOpensAt, st.EventAt)
+	}
+	if p := s.State(at(t, "2026-05-01 00:00")).Phase; p != PhaseBefore {
+		t.Errorf("spring phase = %s", p)
+	}
+	if p := s.State(at(t, "2026-10-31 18:00")).Phase; p != PhaseOpen {
+		t.Errorf("halloween phase = %s", p)
+	}
+	if y := s.LastSeasonYear(at(t, "2026-11-02 00:00")); y != 2026 {
+		t.Errorf("last season after archive = %d", y)
+	}
+	if y := s.LastSeasonYear(at(t, "2026-10-31 18:00")); y != 2025 {
+		t.Errorf("last season during event = %d", y)
 	}
 }
 
@@ -67,14 +79,16 @@ func TestShouldArchive(t *testing.T) {
 }
 
 func TestNewRejectsBadConfig(t *testing.T) {
-	for _, c := range [][3]string{
-		{"13-01", "11-02", "UTC"},
-		{"10-01", "11-2", "UTC"},
-		{"11-05", "11-02", "UTC"},
-		{"10-01", "11-02", "Mars/Olympus"},
+	for _, c := range [][4]string{
+		{"13-01", "10-31", "11-02", "UTC"},
+		{"10-01", "10-31", "11-2", "UTC"},
+		{"11-05", "11-06", "11-02", "UTC"},
+		{"10-01", "11-02", "11-02", "UTC"}, // event must be before archive
+		{"10-01", "09-30", "11-02", "UTC"}, // event must not precede sign-up
+		{"10-01", "10-31", "11-02", "Mars/Olympus"},
 	} {
-		if _, err := New(c[0], c[1], c[2]); err == nil {
-			t.Errorf("New(%q, %q, %q) accepted", c[0], c[1], c[2])
+		if _, err := New(c[0], c[1], c[2], c[3]); err == nil {
+			t.Errorf("New(%v) accepted", c)
 		}
 	}
 }

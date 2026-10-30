@@ -5,12 +5,14 @@ interface Props {
   doors: Door[];
   me: LatLng | null;
   myIds: Set<string>;
+  visited: Set<string>;
   selected: string | null;
   onFocus: (d: Door) => void;
   onRemove: (id: string) => void;
+  onToggleVisited: (id: string) => void;
 }
 
-export default function DoorList({ doors, me, myIds, selected, onFocus, onRemove }: Props) {
+export default function DoorList({ doors, me, myIds, visited, selected, onFocus, onRemove, onToggleVisited }: Props) {
   if (doors.length === 0) {
     return <p className="muted empty">No doors yet. Be the first on your street!</p>;
   }
@@ -18,10 +20,20 @@ export default function DoorList({ doors, me, myIds, selected, onFocus, onRemove
     <ul className="door-list">
       {doors.map((d) => {
         const mine = myIds.has(d.id);
+        const done = visited.has(d.id);
         return (
-          <li key={d.id} className={`${selected === d.id ? "active" : ""} ${mine ? "mine" : ""}`}>
+          <li key={d.id} className={`${selected === d.id ? "active" : ""} ${mine ? "mine" : ""} ${done ? "visited" : ""}`}>
+            <button
+              type="button"
+              className={`check ${done ? "on" : ""}`}
+              onClick={() => onToggleVisited(d.id)}
+              aria-pressed={done}
+              aria-label={done ? "Mark as not visited" : "Mark as visited"}
+              title={done ? "Visited" : "Mark as visited"}
+            >
+              {done ? "✓" : ""}
+            </button>
             <button type="button" className="door" onClick={() => onFocus(d)}>
-              <span className="emoji">🎃</span>
               <span className="body">
                 <span className="addr">{doorLabel(d)}</span>
                 <span className="meta">

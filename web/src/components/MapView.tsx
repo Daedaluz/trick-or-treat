@@ -4,9 +4,9 @@ import { CircleMarker, MapContainer, Marker, Popup, TileLayer, useMap, useMapEve
 import { groupByBuilding, hoursLabel, type Door } from "../api";
 import type { LatLng } from "../App";
 
-const pumpkinIcon = (mine: boolean, active: boolean, count: number) =>
+const pumpkinIcon = (mine: boolean, active: boolean, visited: boolean, count: number) =>
   L.divIcon({
-    className: `pumpkin ${mine ? "mine" : ""} ${active ? "active" : ""}`,
+    className: `pumpkin ${mine ? "mine" : ""} ${active ? "active" : ""} ${visited ? "visited" : ""}`,
     html: count > 1 ? `🎃<span class="badge">${count}</span>` : "🎃",
     iconSize: [32, 32],
     iconAnchor: [16, 28],
@@ -27,6 +27,7 @@ interface Props {
   doors: Door[];
   me: LatLng | null;
   myIds: Set<string>;
+  visited: Set<string>;
   selected: string | null;
   onSelect: (id: string | null) => void;
   draft: LatLng | null;
@@ -82,11 +83,12 @@ export default function MapView(props: Props) {
       {groupByBuilding(props.doors).map((b) => {
         const mine = b.doors.some((d) => props.myIds.has(d.id));
         const active = b.doors.some((d) => d.id === props.selected);
+        const allVisited = b.doors.every((d) => props.visited.has(d.id));
         return (
           <Marker
             key={b.key}
             position={b}
-            icon={pumpkinIcon(mine, active, b.doors.length)}
+            icon={pumpkinIcon(mine, active, allVisited, b.doors.length)}
             eventHandlers={{ click: () => props.onSelect(b.doors[0].id) }}
           >
             <Popup>
@@ -94,7 +96,8 @@ export default function MapView(props: Props) {
               {b.doors.length > 1 && <div className="muted">{b.doors.length} doors in this building</div>}
               <ul className="popup-doors">
                 {b.doors.map((d) => (
-                  <li key={d.id}>
+                  <li key={d.id} className={props.visited.has(d.id) ? "visited" : ""}>
+                    {props.visited.has(d.id) && <span title="Visited">✓ </span>}
                     {d.unit && <strong>{d.unit}</strong>}
                     {hoursLabel(d) && <span> {hoursLabel(d)}</span>}
                     {d.intercom_name && <div className="intercom">🔔 Buzz “{d.intercom_name}”</div>}

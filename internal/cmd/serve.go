@@ -112,7 +112,7 @@ var archiveCmd = &cobra.Command{
 }
 
 func newSeason(cfg *config.Config) (*season.Season, error) {
-	return season.New(cfg.Season.SignupOpens, cfg.Season.ArchiveAfter, cfg.Season.Timezone)
+	return season.New(cfg.Season.SignupOpens, cfg.Season.EventDate, cfg.Season.ArchiveAfter, cfg.Season.Timezone)
 }
 
 func newLogger(cfg *config.Config) *slog.Logger {
