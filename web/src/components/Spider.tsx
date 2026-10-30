@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { SHAKE_EVENT, motionNeedsPermission, startShakeListener } from "../shake";
+import { SHAKE_EVENT, motionNeedsPermission, startOrientationListener, startShakeListener } from "../shake";
+import FallenSpider from "./FallenSpider";
 
 type Kind = "visit" | "fall";
 
@@ -9,12 +10,13 @@ interface Run {
   x: number; // percentage of viewport width where the spider appears
   dir: 1 | -1; // which way it scurries off afterwards
   drop: number; // how far down it dangles, in vh
+  /** For a fall: where the body is when the thread snaps, in viewport px. */
+  from?: { x: number; y: number };
 }
 
 const FIRST_DELAY = [25_000, 70_000] as const;
 const NEXT_DELAY = [150_000, 420_000] as const;
 const VISIT_MS = 9_000;
-const FALL_MS = 6_500;
 
 const rand = (lo: number, hi: number) => lo + Math.random() * (hi - lo);
 
@@ -34,10 +36,10 @@ export default function Spider() {
     let hide: number | undefined;
     let id = 0;
 
-    const start = (kind: Kind, x?: number) => {
+    const start = (kind: Kind, from?: { x: number; y: number }) => {
       window.clearTimeout(hide);
-      setRun({ id: ++id, kind, x: x ?? rand(15, 85), dir: Math.random() < 0.5 ? -1 : 1, drop: rand(18, 42) });
-      hide = window.setTimeout(() => setRun(null), kind === "fall" ? FALL_MS : VISIT_MS);
+      setRun({ id: ++id, kind, x: rand(15, 85), dir: Math.random() < 0.5 ? -1 : 1, drop: rand(18, 42), from });
+      if (kind === "visit") hide = window.setTimeout(() => setRun(null), VISIT_MS);
     };
 
     const schedule = (range: readonly [number, number]) => {
@@ -48,14 +50,26 @@ export default function Spider() {
     };
     schedule(FIRST_DELAY);
 
-    // A shake knocks the current spider down, or summons a startled one.
+    // A shake knocks the dangling spider down from where it hangs, or summons
+    // a startled one from the top. A spider already on the floor handles its
+    // own kicks.
     const onShake = () => {
       const current = (window as unknown as { __totSpider?: Run | null }).__totSpider;
-      start("fall", current?.kind === "visit" ? current.x : undefined);
+      if (current?.kind === "fall") return;
+      const body = document.querySelector(".spider.visit .body");
+      if (body) {
+        const r = body.getBoundingClientRect();
+        start("fall", { x: r.x + r.width / 2, y: r.y + r.height / 2 });
+      } else {
+        start("fall", { x: window.innerWidth * rand(0.15, 0.85), y: -20 });
+      }
     };
     window.addEventListener(SHAKE_EVENT, onShake);
-    // Listen for motion only where it needs no permission prompt (not iOS).
-    if (!motionNeedsPermission()) startShakeListener();
+    // Listen for motion and tilt only where it needs no permission prompt (not iOS).
+    if (!motionNeedsPermission()) {
+      startShakeListener();
+      startOrientationListener();
+    }
 
     return () => {
       window.clearTimeout(timer);
@@ -70,6 +84,9 @@ export default function Spider() {
   }, [run]);
 
   if (!run) return null;
+  if (run.kind === "fall") {
+    return <FallenSpider key={run.id} start={run.from!} dir={run.dir} onDone={() => setRun(null)} />;
+  }
   return (
     <div
       key={run.id}
@@ -80,14 +97,13 @@ export default function Spider() {
           "--x": `${run.x}vw`,
           "--drop": `${run.drop}vh`,
           "--dir": run.dir,
-          "--dur": `${run.kind === "fall" ? FALL_MS : VISIT_MS}ms`,
+          "--dur": `${VISIT_MS}ms`,
         } as React.CSSProperties
       }
     >
       <div className="thread" />
       <div className="body">
         <span className="legs">🕷️</span>
-        {run.kind === "fall" && <span className="dazed">😵</span>}
       </div>
     </div>
   );

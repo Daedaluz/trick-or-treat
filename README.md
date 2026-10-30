@@ -14,7 +14,9 @@ there are no accounts.
 
 Easter eggs: now and then a spider drops in. Shake your phone, or on an
 iPhone (where shaking would need a permission prompt) tap the ghost three
-times, and its thread snaps.
+times, and its thread snaps. The fallen spider obeys gravity: tilt the phone
+and it rolls that way, shake again to kick it, and once it has lain still for
+a few seconds it gets up and runs off.
 
 ## Stack
 

@@ -252,44 +252,13 @@ button { cursor: pointer; }
   from { rotate: -8deg; }
   to   { rotate: 8deg; }
 }
-/* Shaken loose: thread snaps, spider plummets, bounces, lies dazed, flips, runs */
-.spider.fall { animation: spider-fall var(--dur) linear forwards; }
-.spider.fall .thread { animation: spider-thread-snap var(--dur) linear forwards; }
-.spider.fall .body { animation: spider-tumble var(--dur) linear forwards; }
+/* Shaken loose: position and rotation are driven by FallenSpider's physics loop */
+.spider.fallen { top: 0; left: 0; animation: none; will-change: transform; }
+.spider.fallen .body { transform: none; }
+.spider .legs.fast { animation-duration: .18s; }
 .spider .dazed {
-  position: absolute; left: 50%; top: -26px; transform: translateX(-50%);
-  font-size: 18px; opacity: 0; animation: spider-dazed var(--dur) linear forwards;
+  position: absolute; left: 50%; top: -26px; transform: translateX(-50%) rotate(10deg);
+  font-size: 18px; opacity: 0; transition: opacity .3s;
 }
-@keyframes spider-fall {
-  0%   { transform: translate(0, var(--drop)); }
-  6%   { transform: translate(0, calc(var(--drop) - 8px)); }           /* twang */
-  30%  { transform: translate(0, calc(100vh - 44px)); animation-timing-function: ease-out; }
-  36%  { transform: translate(0, calc(100vh - 90px)); animation-timing-function: ease-in; }
-  42%  { transform: translate(0, calc(100vh - 44px)); }
-  46%  { transform: translate(0, calc(100vh - 58px)); }
-  50%  { transform: translate(0, calc(100vh - 44px)); }
-  78%  { transform: translate(0, calc(100vh - 44px)); }
-  100% { transform: translate(calc(var(--dir) * 120vw), calc(100vh - 44px)); }
-}
-@keyframes spider-thread-snap {
-  0%, 6% { opacity: 1; transform: scaleY(1); }
-  9%     { opacity: 1; transform: scaleY(.3) rotate(6deg); }
-  14%, 100% { opacity: 0; }
-}
-@keyframes spider-tumble {
-  0%, 8%  { rotate: 0deg; }
-  30%     { rotate: 540deg; }                      /* tumbling on the way down */
-  42%     { rotate: 180deg; }                      /* lands on its back */
-  50%, 76% { rotate: 180deg; }                     /* lies there, dazed */
-  80%     { rotate: 160deg; }
-  84%     { rotate: 0deg; }                        /* flips upright */
-  100%    { rotate: 0deg; }
-}
-@keyframes spider-dazed {
-  0%, 44% { opacity: 0; }
-  50%, 76% { opacity: 1; transform: translateX(-50%) translateY(-6px) rotate(10deg); }
-  82%, 100% { opacity: 0; }
-}
-.spider.fall .legs { animation-duration: .18s; }
 
 @media (prefers-reduced-motion: reduce) { .spider { display: none; } }
