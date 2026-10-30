@@ -4,7 +4,7 @@
 
 image:
   repository: ghcr.io/daedaluz/trick-or-treat
-  tag: "0.4.1"
+  tag: "0.4.2"
 
 replicaCount: 2
 

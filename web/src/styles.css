@@ -202,7 +202,7 @@ button { cursor: pointer; }
 
 /* Desktop: side panel */
 @media (min-width: 721px) {
-  .sheet { top: 0; left: 0; bottom: 0; width: var(--sheet-w); padding-top: 64px; }
+  .sheet { top: 0; left: 0; bottom: 0; width: var(--sheet-w); }
   .topbar { left: var(--sheet-w); }
   .map { left: var(--sheet-w); }
   .leaflet-container .leaflet-control-attribution { margin-right: 0; }
