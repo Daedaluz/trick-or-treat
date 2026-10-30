@@ -12,3 +12,4 @@ web/dist/*
 *.db
 .env
 /config.yaml
+web/*.tsbuildinfo

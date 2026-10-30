@@ -104,6 +104,13 @@ export const api = {
       headers: { "X-Door-Token": token },
     }).then((r) => check<void>(r)),
 
+  sendFeedback: (f: { message: string; contact: string }) =>
+    fetch("/api/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(f),
+    }).then((r) => check<void>(r)),
+
   geocode: (q: string) =>
     fetch(`/api/geocode?q=${encodeURIComponent(q)}`).then((r) => check<GeocodeResult[]>(r)),
 };

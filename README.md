@@ -40,13 +40,15 @@ Every flag can be set as an env var with the `TOT_` prefix, or in a file passed 
 | `--user-agent`   | `TOT_USER_AGENT`    | `trick-or-treat/0.1 (…)`                  |
 | `--log-json`     | `TOT_LOG_JSON`      | `false`                                   |
 | `--trust-proxy`  | `TOT_TRUST_PROXY`   | `true`                                    |
+| `--admin-token`  | `TOT_ADMIN_TOKEN`   | empty (admin endpoints disabled)          |
 | `--season.signup-opens`     | `TOT_SEASON_SIGNUP_OPENS`     | `10-01` (MM-DD)   |
 | `--season.archive-after`    | `TOT_SEASON_ARCHIVE_AFTER`    | `11-02` (MM-DD)   |
 | `--season.timezone`         | `TOT_SEASON_TIMEZONE`         | `Europe/Stockholm` |
 | `--season.archive-interval` | `TOT_SEASON_ARCHIVE_INTERVAL` | `1h`              |
 
 Commands: `serve` (migrate, run the hourly archive job and serve), `migrate`
-(migrate and exit), `archive` (archive due seasons and exit, handy as a CronJob).
+(migrate and exit), `archive` (archive due seasons and exit, handy as a CronJob),
+`feedback list [--since YYYY-MM-DD] [--limit N] [--json]` (read visitor feedback).
 
 Example config file (`--config config.yaml`):
 
@@ -67,7 +69,24 @@ season:
 | `POST`   | `/api/doors`      | Register a door; `403` while sign-up is closed           |
 | `DELETE` | `/api/doors/{id}` | Remove a door; needs the `X-Door-Token` header           |
 | `GET`    | `/api/geocode?q=` | Address search (Nominatim proxy)                         |
+| `POST`   | `/api/feedback`   | Leave feedback (5 per hour per IP); write-only           |
+| `GET`    | `/api/admin/feedback` | Read feedback; needs `Authorization: Bearer <admin token>` and only exists when `--admin-token` is set |
 | `GET`    | `/healthz`, `/readyz` | Probes                                               |
+
+## Reading feedback
+
+Feedback is write-only through the public API. Read it either from inside the
+cluster with the CLI, which talks straight to the database:
+
+```bash
+kubectl -n trick-or-treat exec deploy/trick-or-treat -- /trick-or-treat feedback list
+```
+
+or, if you set `admin.token` in the chart, over HTTP:
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" https://trick-or-treat.example.com/api/admin/feedback
+```
 
 ## Deploy to Kubernetes
 

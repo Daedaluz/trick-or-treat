@@ -24,6 +24,8 @@ type handler struct {
 	geoClient *http.Client
 	geoMu     sync.Mutex // Nominatim allows at most one request per second.
 	geoLast   time.Time
+
+	feedbackLimit *ipLimiter
 }
 
 // New builds the gin engine with API routes and the embedded SPA.
@@ -43,6 +45,8 @@ func New(st *store.Store, cfg *config.Config, sea *season.Season, log *slog.Logg
 		season:    sea,
 		log:       log,
 		geoClient: &http.Client{Timeout: 10 * time.Second},
+
+		feedbackLimit: newIPLimiter(5, time.Hour),
 	}
 
 	r.GET("/healthz", func(c *gin.Context) { c.String(http.StatusOK, "ok") })
@@ -61,6 +65,13 @@ func New(st *store.Store, cfg *config.Config, sea *season.Season, log *slog.Logg
 		api.POST("/doors", h.createDoor)
 		api.DELETE("/doors/:id", h.deleteDoor)
 		api.GET("/geocode", h.geocode)
+		api.POST("/feedback", h.createFeedback)
+
+		// Operator-only reads exist only when an admin token is configured.
+		if cfg.AdminToken != "" {
+			admin := api.Group("/admin", h.requireAdmin)
+			admin.GET("/feedback", h.listFeedback)
+		}
 	}
 
 	r.NoRoute(gin.WrapH(web.Handler()))

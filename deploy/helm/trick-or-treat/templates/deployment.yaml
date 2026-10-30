@@ -55,6 +55,13 @@ spec:
               value: {{ .Values.config.season.timezone | quote }}
             - name: TOT_SEASON_ARCHIVE_INTERVAL
               value: {{ .Values.config.season.archiveInterval | quote }}
+            {{- if or .Values.admin.token .Values.admin.existingSecret }}
+            - name: TOT_ADMIN_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.admin.existingSecret | default (printf "%s-admin" (include "trick-or-treat.fullname" .)) }}
+                  key: {{ if .Values.admin.existingSecret }}{{ .Values.admin.existingSecretKey }}{{ else }}token{{ end }}
+            {{- end }}
             - name: TOT_DATABASE_URL
               valueFrom:
                 secretKeyRef:

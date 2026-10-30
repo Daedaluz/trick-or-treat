@@ -19,6 +19,13 @@ database:
   existingSecret: ""
   existingSecretKey: "uri"
 
+# Operator-only /api/admin endpoints (e.g. reading feedback). Leave both empty
+# to disable them; `kubectl exec ... trick-or-treat feedback list` works regardless.
+admin:
+  token: ""
+  existingSecret: ""
+  existingSecretKey: "token"
+
 config:
   # Sent to Nominatim; the usage policy asks for a way to contact the operator.
   userAgent: "trick-or-treat/0.1 (https://github.com/Daedaluz/trick-or-treat)"

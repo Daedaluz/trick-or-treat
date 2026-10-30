@@ -131,6 +131,13 @@ button { cursor: pointer; }
 .intercom { color: var(--accent); font-size: 13px; font-weight: 600; }
 .tag { background: var(--accent); color: var(--accent-ink); border-radius: 6px; padding: 0 6px; font-weight: 600; }
 
+.sheet-foot {
+  flex: none; display: flex; justify-content: center;
+  padding: 8px 16px calc(env(safe-area-inset-bottom) + 8px);
+  border-top: 1px solid rgba(255,255,255,.08); font-size: 14px;
+}
+.sheet.closed .sheet-foot { visibility: hidden; }
+
 /* Add form */
 .add-panel { display: flex; flex-direction: column; gap: 12px; padding-bottom: calc(env(safe-area-inset-bottom) + 16px); overflow-y: auto; overflow-x: hidden; }
 .add-panel > * { flex-shrink: 0; } /* never squash a field or the results to fit the sheet */

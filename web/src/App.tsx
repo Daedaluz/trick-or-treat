@@ -3,9 +3,10 @@ import { api, distanceM, loadMyDoors, saveMyDoors, type Door, type MyDoor, type 
 import MapView, { type Basemap } from "./components/MapView";
 import AddDoorPanel from "./components/AddDoorPanel";
 import DoorList from "./components/DoorList";
+import FeedbackPanel from "./components/FeedbackPanel";
 
 export type LatLng = { lat: number; lng: number };
-type Mode = "browse" | "add";
+type Mode = "browse" | "add" | "feedback";
 
 export default function App() {
   const [doors, setDoors] = useState<Door[]>([]);
@@ -170,7 +171,9 @@ export default function App() {
 
       <aside className={`sheet ${sheetOpen ? "open" : "closed"}`}>
         <button className="sheet-handle" onClick={() => setSheetOpen((o) => !o)} aria-label="Toggle panel" />
-        {mode === "add" ? (
+        {mode === "feedback" ? (
+          <FeedbackPanel onClose={() => setMode("browse")} />
+        ) : mode === "add" ? (
           <AddDoorPanel
             draft={draft}
             onDraftChange={(p) => {
@@ -206,6 +209,18 @@ export default function App() {
               onFocus={focusDoor}
               onRemove={removeDoor}
             />
+            <footer className="sheet-foot">
+              <button
+                type="button"
+                className="link"
+                onClick={() => {
+                  setMode("feedback");
+                  setSheetOpen(true);
+                }}
+              >
+                💬 Leave feedback
+              </button>
+            </footer>
           </>
         )}
       </aside>
