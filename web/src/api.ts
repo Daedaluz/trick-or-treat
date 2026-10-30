@@ -4,6 +4,7 @@ export interface Door {
   lng: number;
   address: string;
   unit?: string;
+  intercom_name?: string;
   note?: string;
   open_from?: string;
   open_to?: string;
@@ -22,6 +23,7 @@ export interface NewDoor {
   lng: number;
   address: string;
   unit: string;
+  intercom_name: string;
   note: string;
   open_from: string;
   open_to: string;

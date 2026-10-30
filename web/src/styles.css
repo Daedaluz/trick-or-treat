@@ -123,6 +123,7 @@ button { cursor: pointer; }
 .door-list .addr { font-weight: 600; }
 .door-list .meta { display: flex; gap: 10px; color: var(--muted); font-size: 13px; flex-wrap: wrap; }
 .door-list .note { color: var(--muted); font-size: 13px; }
+.intercom { color: var(--accent); font-size: 13px; font-weight: 600; }
 .tag { background: var(--accent); color: var(--accent-ink); border-radius: 6px; padding: 0 6px; font-weight: 600; }
 
 /* Add form */

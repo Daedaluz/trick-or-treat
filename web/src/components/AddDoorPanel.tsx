@@ -15,6 +15,7 @@ export default function AddDoorPanel({ draft, onDraftChange, onSubmit, onCancel 
   const [searching, setSearching] = useState(false);
   const [address, setAddress] = useState("");
   const [unit, setUnit] = useState("");
+  const [intercom, setIntercom] = useState("");
   const [note, setNote] = useState("");
   const [openFrom, setOpenFrom] = useState("17:00");
   const [openTo, setOpenTo] = useState("20:00");
@@ -63,7 +64,7 @@ export default function AddDoorPanel({ draft, onDraftChange, onSubmit, onCancel 
     setBusy(true);
     setError(null);
     try {
-      await onSubmit({ lat: draft.lat, lng: draft.lng, address: address.trim(), unit: unit.trim(), note: note.trim(), open_from: openFrom, open_to: openTo });
+      await onSubmit({ lat: draft.lat, lng: draft.lng, address: address.trim(), unit: unit.trim(), intercom_name: intercom.trim(), note: note.trim(), open_from: openFrom, open_to: openTo });
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -121,6 +122,16 @@ export default function AddDoorPanel({ draft, onDraftChange, onSubmit, onCancel 
           value={unit}
           onChange={(e) => setUnit(e.target.value)}
           placeholder="Apt 1203, 3rd floor — for buildings with several households"
+          maxLength={100}
+        />
+      </label>
+
+      <label>
+        Name on the intercom (optional)
+        <input
+          value={intercom}
+          onChange={(e) => setIntercom(e.target.value)}
+          placeholder="Andersson — so visitors know who to buzz"
           maxLength={100}
         />
       </label>

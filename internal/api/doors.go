@@ -32,6 +32,7 @@ type createDoorRequest struct {
 	Lng      float64 `json:"lng"`
 	Address  string  `json:"address"`
 	Unit     string  `json:"unit"`
+	Intercom string  `json:"intercom_name"`
 	Note     string  `json:"note"`
 	OpenFrom string  `json:"open_from"`
 	OpenTo   string  `json:"open_to"`
@@ -48,14 +49,15 @@ func (h *handler) createDoor(c *gin.Context) {
 	}
 	req.Address = strings.TrimSpace(req.Address)
 	req.Unit = strings.TrimSpace(req.Unit)
+	req.Intercom = strings.TrimSpace(req.Intercom)
 	req.Note = strings.TrimSpace(req.Note)
 
 	switch {
 	case req.Address == "":
 		c.JSON(http.StatusBadRequest, gin.H{"error": "address is required"})
 		return
-	case len(req.Address) > 300 || len(req.Unit) > 100 || len(req.Note) > 500:
-		c.JSON(http.StatusBadRequest, gin.H{"error": "address, unit or note too long"})
+	case len(req.Address) > 300 || len(req.Unit) > 100 || len(req.Intercom) > 100 || len(req.Note) > 500:
+		c.JSON(http.StatusBadRequest, gin.H{"error": "a field is too long"})
 		return
 	case req.Lat < -90 || req.Lat > 90 || req.Lng < -180 || req.Lng > 180 || (req.Lat == 0 && req.Lng == 0):
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid coordinates"})
@@ -72,6 +74,7 @@ func (h *handler) createDoor(c *gin.Context) {
 		Lng:       req.Lng,
 		Address:   req.Address,
 		Unit:      req.Unit,
+		Intercom:  req.Intercom,
 		Note:      req.Note,
 		OpenFrom:  req.OpenFrom,
 		OpenTo:    req.OpenTo,

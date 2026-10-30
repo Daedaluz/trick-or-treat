@@ -97,6 +97,7 @@ export default function MapView(props: Props) {
                   <li key={d.id}>
                     {d.unit && <strong>{d.unit}</strong>}
                     {hoursLabel(d) && <span> {hoursLabel(d)}</span>}
+                    {d.intercom_name && <div className="intercom">🔔 Buzz “{d.intercom_name}”</div>}
                     {d.note && <div className="note">{d.note}</div>}
                   </li>
                 ))}

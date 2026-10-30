@@ -29,6 +29,7 @@ export default function DoorList({ doors, me, myIds, selected, onFocus, onRemove
                   {hoursLabel(d) && <span>{hoursLabel(d)}</span>}
                   {mine && <span className="tag">yours</span>}
                 </span>
+                {d.intercom_name && <span className="intercom">🔔 Buzz “{d.intercom_name}”</span>}
                 {d.note && <span className="note">{d.note}</span>}
               </span>
             </button>
