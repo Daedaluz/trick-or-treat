@@ -16,8 +16,19 @@ database:
   # Either give the URL directly (it will be stored in a chart-managed Secret)…
   url: ""
   # …or point at an existing Secret, e.g. one created by CloudNativePG or Zalando's operator.
+  # Ignored when cnpg.enabled: the chart then uses the <fullname>-db-app secret CNPG creates.
   existingSecret: ""
   existingSecretKey: "uri"
+
+# Let the chart create a CloudNativePG cluster (requires the CNPG operator).
+cnpg:
+  enabled: false
+  instances: 2
+  imageName: ghcr.io/cloudnative-pg/postgresql:18
+  storage:
+    size: 2Gi
+    storageClass: ""
+  resources: {}
 
 # Operator-only /api/admin endpoints (e.g. reading feedback). Leave both empty
 # to disable them; `kubectl exec ... trick-or-treat feedback list` works regardless.

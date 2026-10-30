@@ -36,7 +36,9 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{- define "trick-or-treat.dbSecretName" -}}
-{{- if .Values.database.existingSecret }}
+{{- if .Values.cnpg.enabled }}
+{{- include "trick-or-treat.fullname" . }}-db-app
+{{- else if .Values.database.existingSecret }}
 {{- .Values.database.existingSecret }}
 {{- else }}
 {{- include "trick-or-treat.fullname" . }}-db
@@ -44,7 +46,9 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{- define "trick-or-treat.dbSecretKey" -}}
-{{- if .Values.database.existingSecret }}
+{{- if .Values.cnpg.enabled }}
+{{- "uri" }}
+{{- else if .Values.database.existingSecret }}
 {{- .Values.database.existingSecretKey }}
 {{- else }}
 {{- "uri" }}

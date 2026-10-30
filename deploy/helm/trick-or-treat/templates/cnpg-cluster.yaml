@@ -1,0 +1,31 @@
+{{- if .Values.cnpg.enabled }}
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: {{ include "trick-or-treat.fullname" . }}-db
+  labels:
+    {{- include "trick-or-treat.labels" . | nindent 4 }}
+spec:
+  instances: {{ .Values.cnpg.instances }}
+  imageName: {{ .Values.cnpg.imageName | quote }}
+  enableSuperuserAccess: false
+  bootstrap:
+    initdb:
+      database: trick_or_treat
+      owner: trick
+      encoding: UTF8
+      localeCollate: C
+      localeCType: C
+  storage:
+    size: {{ .Values.cnpg.storage.size }}
+    {{- with .Values.cnpg.storage.storageClass }}
+    storageClass: {{ . }}
+    {{- end }}
+    resizeInUseVolumes: true
+  affinity:
+    podAntiAffinityType: preferred
+  {{- with .Values.cnpg.resources }}
+  resources:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}

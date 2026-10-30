@@ -29,8 +29,9 @@ image:
 	docker build -t $(IMAGE):$(TAG) .
 
 # Needs `docker login ghcr.io` with a token that has write:packages.
-push: image
-	docker push $(IMAGE):$(TAG)
+# Multi-arch (amd64 + arm64); buildx pushes straight to the registry.
+push:
+	docker buildx build --platform linux/amd64,linux/arm64 -t $(IMAGE):$(TAG) -t $(IMAGE):latest --push .
 
 helm-lint:
 	helm lint deploy/helm/trick-or-treat

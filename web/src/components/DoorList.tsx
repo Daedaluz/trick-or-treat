@@ -3,6 +3,7 @@ import type { LatLng } from "../App";
 
 interface Props {
   doors: Door[];
+  total: number;
   me: LatLng | null;
   myIds: Set<string>;
   visited: Set<string>;
@@ -12,9 +13,13 @@ interface Props {
   onToggleVisited: (id: string) => void;
 }
 
-export default function DoorList({ doors, me, myIds, visited, selected, onFocus, onRemove, onToggleVisited }: Props) {
+export default function DoorList({ doors, total, me, myIds, visited, selected, onFocus, onRemove, onToggleVisited }: Props) {
   if (doors.length === 0) {
-    return <p className="muted empty">No doors yet. Be the first on your street!</p>;
+    return (
+      <p className="muted empty">
+        {total === 0 ? "No doors yet. Be the first on your street!" : "No doors in view. Pan or zoom out to find some."}
+      </p>
+    );
   }
   return (
     <ul className="door-list">

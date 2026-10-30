@@ -1,0 +1,31 @@
+# Values for trickortreat.inits.se on the inits cluster.
+# helm upgrade --install trick-or-treat deploy/helm/trick-or-treat \
+#   -n trick-or-treat --create-namespace -f deploy/helm/values-inits.yaml
+
+image:
+  repository: ghcr.io/daedaluz/trick-or-treat
+  tag: "0.1.0"
+
+replicaCount: 2
+
+cnpg:
+  enabled: true
+  instances: 2
+  imageName: ghcr.io/cloudnative-pg/postgresql:18
+  storage:
+    size: 2Gi
+    storageClass: ceph-block
+
+httpRoute:
+  enabled: true
+  parentRefs:
+    - name: www
+      namespace: ingress
+      sectionName: https
+  hostnames:
+    - trickortreat.inits.se
+
+config:
+  userAgent: "trick-or-treat/0.1 (https://trickortreat.inits.se; https://github.com/Daedaluz/trick-or-treat)"
+  season:
+    timezone: Europe/Stockholm

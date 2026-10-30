@@ -33,6 +33,19 @@ interface Props {
   draft: LatLng | null;
   onDraftMove?: (p: LatLng) => void;
   flyTo: { target: LatLng; zoom?: number; n: number } | null;
+  onBoundsChange: (b: Bounds) => void;
+}
+
+/** Visible area of the map, as plain numbers so React can compare it. */
+export interface Bounds {
+  south: number;
+  west: number;
+  north: number;
+  east: number;
+}
+
+export function inBounds(b: Bounds, p: LatLng): boolean {
+  return p.lat >= b.south && p.lat <= b.north && p.lng >= b.west && p.lng <= b.east;
 }
 
 // Default view: somewhere sensible before we know where the user is.
@@ -127,8 +140,21 @@ export default function MapView(props: Props) {
 }
 
 /** Imperative bits: fly-to requests, click-to-place in add mode, popup open on select. */
-function Controller({ flyTo, onDraftMove, selected, onSelect }: Props) {
+function Controller({ flyTo, onDraftMove, selected, onSelect, onBoundsChange }: Props) {
   const map = useMap();
+
+  // Report the visible area so the list can follow the map.
+  useEffect(() => {
+    const report = () => {
+      const b = map.getBounds();
+      onBoundsChange({ south: b.getSouth(), west: b.getWest(), north: b.getNorth(), east: b.getEast() });
+    };
+    report();
+    map.on("moveend zoomend resize", report);
+    return () => {
+      map.off("moveend zoomend resize", report);
+    };
+  }, [map, onBoundsChange]);
 
   // Leaflet measures its container once; keep it honest when the pane/sheet resizes.
   useEffect(() => {

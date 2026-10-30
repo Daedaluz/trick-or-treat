@@ -111,4 +111,13 @@ helm upgrade --install trick-or-treat deploy/helm/trick-or-treat \
   --set 'imagePullSecrets[0].name=ghcr-pull'
 ```
 
-See [`deploy/helm/trick-or-treat/values.yaml`](deploy/helm/trick-or-treat/values.yaml) for all options.
+With the CloudNativePG operator installed the chart can create the database too
+(`cnpg.enabled=true`); see [`deploy/helm/values-inits.yaml`](deploy/helm/values-inits.yaml)
+for a complete example, and [`deploy/helm/trick-or-treat/values.yaml`](deploy/helm/trick-or-treat/values.yaml)
+for all options.
+
+The image is multi-arch (amd64 and arm64):
+
+```bash
+docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/daedaluz/trick-or-treat:0.1.0 --push .
+```

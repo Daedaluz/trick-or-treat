@@ -11,7 +11,7 @@ import {
   type NewDoor,
   type SeasonState,
 } from "./api";
-import MapView, { type Basemap } from "./components/MapView";
+import MapView, { inBounds, type Basemap, type Bounds } from "./components/MapView";
 import AddDoorPanel from "./components/AddDoorPanel";
 import DoorList from "./components/DoorList";
 import FeedbackPanel from "./components/FeedbackPanel";
@@ -25,6 +25,7 @@ export default function App() {
   const [doors, setDoors] = useState<Door[]>([]);
   const [season, setSeason] = useState<SeasonState | null>(null);
   const [visited, setVisited] = useState<Set<string>>(() => loadVisited(new Date().getFullYear()));
+  const [bounds, setBounds] = useState<Bounds | null>(null);
   const [myDoors, setMyDoors] = useState<MyDoor[]>(() => loadMyDoors());
   const [me, setMe] = useState<LatLng | null>(null);
   const [locating, setLocating] = useState(false);
@@ -95,10 +96,12 @@ export default function App() {
     locate();
   }, [locate]);
 
+  // The list follows the map: only doors in the visible area, nearest first.
   const sorted = useMemo(() => {
-    if (!me) return doors;
-    return [...doors].sort((a, b) => distanceM(me, a) - distanceM(me, b));
-  }, [doors, me]);
+    const visible = bounds ? doors.filter((d) => inBounds(bounds, d)) : doors;
+    if (!me) return visible;
+    return [...visible].sort((a, b) => distanceM(me, a) - distanceM(me, b));
+  }, [doors, me, bounds]);
 
   const myIds = useMemo(() => new Set(myDoors.map((d) => d.id)), [myDoors]);
 
@@ -173,6 +176,7 @@ export default function App() {
         draft={mode === "add" ? draft : null}
         onDraftMove={mode === "add" ? setDraft : undefined}
         flyTo={flyTo}
+        onBoundsChange={setBounds}
       />
 
       <Spider />
@@ -232,10 +236,11 @@ export default function App() {
           <>
             <div className="sheet-head">
               <div>
-                <strong>{doors.length}</strong> {doors.length === 1 ? "door" : "doors"} open{" "}
-                {season ? `in ${season.year}` : "this year"}
+                <strong>{sorted.length}</strong> {sorted.length === 1 ? "door" : "doors"} in view
                 <div className="muted">
-                  {visitedCount > 0 ? `${visitedCount} visited` : me ? "Tap a door to see it on the map" : "Tap ◎ to sort by distance"}
+                  {doors.length} open {season ? `in ${season.year}` : "this year"}
+                  {visitedCount > 0 && ` · ${visitedCount} visited`}
+                  {!me && " · tap ◎ to sort by distance"}
                 </div>
               </div>
               {season?.signup_open !== false && (
@@ -247,6 +252,7 @@ export default function App() {
             {season && !season.signup_open && <p className="closed">{season.reason}</p>}
             <DoorList
               doors={sorted}
+              total={doors.length}
               me={me}
               myIds={myIds}
               visited={visited}
